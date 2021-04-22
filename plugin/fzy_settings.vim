@@ -1,0 +1,365 @@
+if globpath(&rtp, 'plugin/fzy.vim') == ''
+    echohl WarningMsg | echomsg 'vim-fzy is not found.' | echohl none
+    finish
+endif
+
+if get(g:, 'loaded_fzy_settings_vim', 0)
+    finish
+endif
+
+let g:fzy_find_tool    = get(g:, 'fzy_find_tool', 'rg')
+let g:fzy_follow_links = get(g:, 'fzy_follow_links', 0)
+let s:fzy_follow_links = g:fzy_follow_links
+
+" Check if Popup/Floating Win is available for FZF or not
+if has('nvim')
+    let s:has_popup = exists('*nvim_win_set_config') && has('nvim-0.4.2')
+else
+    let s:has_popup = exists('*popup_create') && has('patch-8.2.0204')
+endif
+
+let g:fzy = {
+            \ 'lines':  15,
+            \ 'prompt': '>>> ',
+            \ 'popupwin': get(g:, 'fzy_popup', 1) && s:has_popup ? v:true : v:false,
+            \ }
+
+let g:fzy.popup = {
+            \   'padding':     [0, 1, 0, 1],
+            \   'borders':     [0, 0, 0, 0],
+            \   'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
+            \   'minwidth':    90,
+            \ }
+
+function! s:IsUniversalCtags(ctags_path) abort
+    try
+        return system(printf('%s --version', a:ctags_path)) =~# 'Universal Ctags'
+    catch
+        return 0
+    endtry
+endfunction
+
+let g:fzy_ctags        = get(g:, 'fzy_ctags', 'ctags')
+let g:fzy_ctags_ignore = get(g:, 'fzy_ctags_ignore', expand('~/.ctagsignore'))
+
+let g:fzy_tags_command = printf('%s -R', g:fzy_ctags)
+if s:IsUniversalCtags(g:fzy_ctags) && filereadable(g:fzy_ctags_ignore)
+    let g:fzy_tags_command = printf('%s --exclude=@%s -R', g:fzy_ctags, g:fzy_ctags_ignore)
+endif
+
+let s:fzy_available_commands = filter(['rg', 'fd'], 'executable(v:val)')
+
+let s:fzy_find_commands = {
+            \ 'rg': 'rg --files --color never --no-ignore-vcs --ignore-dot --ignore-parent --hidden',
+            \ 'fd': 'fd --type file --color never --no-ignore-vcs --hidden',
+            \ }
+
+function! s:build_fzy_find_command() abort
+    let l:cmd = s:fzy_find_commands[s:fzy_current_command]
+    if s:fzy_follow_links
+        let l:cmd .= ' --follow'
+    endif
+    let g:fzy.findcmd = l:cmd
+    return l:cmd
+endfunction
+
+function! s:detect_fzy_current_command() abort
+    let idx = index(s:fzy_available_commands, g:fzy_find_tool)
+    let s:fzy_current_command = get(s:fzy_available_commands, idx > -1 ? idx : 0)
+endfunction
+
+function! s:print_fzy_current_command_info() abort
+    echo 'Fzy is using command `' . s:fzy_file_command . '`!'
+endfunction
+
+command! PrintFzyCurrentCommandInfo call <SID>print_fzy_current_command_info()
+
+function! s:change_fzy_find_command(bang, command) abort
+    " Reset to default command
+    if a:bang
+        call s:detect_fzy_current_command()
+    elseif strlen(a:command)
+        if index(s:fzy_available_commands, a:command) == -1
+            return
+        endif
+        let s:fzy_current_command = a:command
+    else
+        let idx = index(s:fzy_available_commands, s:fzy_current_command)
+        let s:fzy_current_command = get(s:fzy_available_commands, idx + 1, s:fzy_available_commands[0])
+    endif
+    call s:build_fzy_find_command()
+    call s:print_fzy_current_command_info()
+endfunction
+
+function! s:list_fzy_available_commands(...) abort
+    return s:fzy_available_commands
+endfunction
+
+command! -nargs=? -bang -complete=customlist,<SID>list_fzy_available_commands ChangeFzyFindCommand call <SID>change_fzy_find_command(<bang>0, <q-args>)
+
+function! s:toggle_fzy_follow_links() abort
+    if s:fzy_follow_links == 0
+        let s:fzy_follow_links = 1
+        echo 'Fzy follows symlinks!'
+    else
+        let s:fzy_follow_links = 0
+        echo 'Fzy does not follow symlinks!'
+    endif
+    call s:build_fzy_find_command()
+endfunction
+
+command! ToggleFzyFollowLinks call <SID>toggle_fzy_follow_links()
+
+call s:detect_fzy_current_command()
+call s:build_fzy_find_command()
+
+function! s:find_project_dir(starting_path) abort
+    if empty(a:starting_path)
+        return ''
+    endif
+
+    for root_marker in ['.git', '.hg', '.svn']
+        let root_dir = finddir(root_marker, a:starting_path . ';')
+        if empty(root_dir)
+            continue
+        endif
+
+        let root_dir = substitute(root_dir, root_marker, '', '')
+        if !empty(root_dir)
+            let root_dir = fnamemodify(root_dir, ':p:~:.')
+        endif
+
+        return root_dir
+    endfor
+
+    return ''
+endfunction
+
+command! FzyFindRoot execute 'FzyFind' s:find_project_dir(expand('%:p:h'))
+
+" Extra commands
+
+function! s:opts(title, space = 0) abort
+    let opts = get(g:, 'fzy', {})->copy()->extend({'statusline': a:title})
+    call get(opts, 'popup', {})->extend({'title': a:space ? ' ' .. a:title : a:title})
+    return opts
+endfunction
+
+function! s:find_cb(dir, vim_cmd, choice) abort
+    let fpath = fnamemodify(a:dir, ':p:s?/$??') .. '/' .. a:choice
+    let fpath = resolve(fpath)->fnamemodify(':.')->fnameescape()
+    call histadd('cmd', a:vim_cmd .. ' ' .. fpath)
+    call s:tryexe(a:vim_cmd .. ' ' .. fpath)
+endfunction
+
+function! s:open_file_cb(vim_cmd, choice) abort
+    const fname = fnameescape(a:choice)
+    call histadd('cmd', a:vim_cmd .. ' ' .. fname)
+    call s:tryexe(a:vim_cmd .. ' ' .. fname)
+endfunction
+
+function! s:open_tag_cb(vim_cmd, choice) abort
+    call histadd('cmd', a:vim_cmd .. ' ' .. a:choice)
+    call s:tryexe(a:vim_cmd .. ' ' .. escape(a:choice, '"'))
+endfunction
+
+function! s:fzy_opts(opts) abort
+    let l:opts = extend({}, s:opts(''))
+    let l:opts = extend(l:opts, a:opts)
+    return l:opts
+endfunction
+
+function! s:warn(message) abort
+    echohl WarningMsg
+    echomsg a:message
+    echohl None
+    return 0
+endfunction
+
+function! s:fzy_bufopen(e) abort
+    let list = split(a:e)
+    if len(list) < 4
+        return
+    endif
+
+    let [linenr, col, file_text] = [list[1], list[2]+1, join(list[3:])]
+    let lines = getbufline(file_text, linenr)
+    let path = file_text
+    if empty(lines)
+        if stridx(join(split(getline(linenr))), file_text) == 0
+            let lines = [file_text]
+            let path = bufname('%')
+        elseif filereadable(path)
+            let lines = ['buffer unloaded']
+        else
+            " Skip.
+            return
+        endif
+    endif
+
+    execute 'edit '  . path
+    call cursor(linenr, col)
+endfunction
+
+function! s:fzy_jumplist() abort
+    return split(call('execute', ['jumps']), '\n')[1:]
+endfunction
+
+function! s:fzy_jumps() abort
+    call fzy#start(<SID>fzy_jumplist(), funcref('s:fzy_bufopen'), s:fzy_opts({ 'prompt': 'Jumps> ' }))
+endfunction
+
+command! FzyJumps call <SID>fzy_jumps()
+
+function! s:fzy_yank_sink(e) abort
+    let @" = a:e
+    echohl ModeMsg
+    echo 'Yanked!'
+    echohl None
+endfunction
+
+function! s:fzy_messages_source() abort
+    return split(call('execute', ['messages']), '\n')
+endfunction
+
+function! s:fzy_messages() abort
+    call fzy#start(<SID>fzy_messages_source(), funcref('s:fzy_yank_sink'), s:fzy_opts({ 'prompt': 'Messages> ' }))
+endfunction
+
+command! FzyMessages call <SID>fzy_messages()
+
+function! s:fzy_open_quickfix_item(e) abort
+    let line = a:e
+    let filename = fnameescape(split(line, ':\d\+:')[0])
+    let linenr = matchstr(line, ':\d\+:')[1:-2]
+    let colum = matchstr(line, '\(:\d\+\)\@<=:\d\+:')[1:-2]
+    execute 'e ' . filename
+    call cursor(linenr, colum)
+endfunction
+
+function! s:fzy_quickfix_to_grep(v) abort
+    return bufname(a:v.bufnr) . ':' . a:v.lnum . ':' . a:v.col . ':' . a:v.text
+endfunction
+
+function! s:fzy_get_quickfix() abort
+    return map(getqflist(), 's:fzy_quickfix_to_grep(v:val)')
+endfunction
+
+function! s:fzy_quickfix() abort
+    let s:source = 'quickfix'
+    let items = <SID>fzy_get_quickfix()
+    if len(items) == 0
+        call s:warn('No quickfix items!')
+        return
+    endif
+    call fzy#start(items, funcref('s:fzy_open_quickfix_item'), s:fzy_opts({ 'prompt': 'Quickfix> ' }))
+endfunction
+
+function! s:fzy_get_location_list() abort
+    return map(getloclist(0), 's:fzy_quickfix_to_grep(v:val)')
+endfunction
+
+function! s:fzy_location_list() abort
+    let s:source = 'location_list'
+    let items = <sid>fzy_get_location_list()
+    if len(items) == 0
+        call s:warn('No location list items!')
+        return
+    endif
+    call fzy#start(items, funcref('s:fzy_open_quickfix_item'), s:fzy_opts({ 'prompt': 'LocationList> ' }))
+endfunction
+
+command! FzyQuickfix call s:fzy_quickfix()
+command! FzyLocationList call s:fzy_location_list()
+
+function! s:fzy_yank_register(line) abort
+    call setreg('"', getreg(a:line[4]))
+    echohl ModeMsg
+    echo 'Yanked!'
+    echohl None
+endfunction
+
+function! s:fzy_get_registers() abort
+    let l:items = split(call('execute', ['registers']), '\n')[1:]
+    call map(l:items, 's:strip(v:val)')
+    return l:items
+endfunction
+
+function! s:fzy_registers() abort
+    let items = <SID>fzy_get_registers()
+    if len(items) == 0
+        call s:warn('No register items!')
+        return
+    endif
+    call fzy#start(items, funcref('s:fzy_yank_register'), s:fzy_opts({ 'prompt': 'Registers> ' }))
+endfunction
+
+command! FzyRegisters call s:fzy_registers()
+
+if exists('*trim')
+    function! s:strip(str) abort
+        return trim(a:str)
+    endfunction
+else
+    function! s:strip(str) abort
+        return substitute(a:str, '^\s*\(.\{-}\)\s*$', '\1', '')
+    endfunction
+endif
+
+function! s:fzy_outline_format(lists) abort
+    let l:result = []
+    let l:format = printf('%%%ds', len(string(line('$'))))
+    for list in a:lists
+        let linenr = list[2][:len(list[2])-3]
+        let line = s:strip(getline(linenr))
+        call add(l:result, [
+                    \ printf("%s:%s", list[-1], printf(l:format, linenr)),
+                    \ substitute(line, list[0], list[0], '')
+                    \ ])
+    endfor
+    return l:result
+endfunction
+
+function! s:fzy_outline_source(tag_cmds) abort
+    if !filereadable(expand('%'))
+        throw 'Save the file first'
+    endif
+    let lines = []
+    for cmd in a:tag_cmds
+        let lines = split(system(cmd), "\n")
+        if !v:shell_error && len(lines)
+            break
+        endif
+    endfor
+    if v:shell_error
+        throw get(lines, 0, 'Failed to extract tags')
+    elseif empty(lines)
+        throw 'No tags found'
+    endif
+    return map(s:fzy_outline_format(map(lines, 'split(v:val, "\t")')), 'join(v:val, "\t")')
+endfunction
+
+function! s:fzy_outline_sink(path, editcmd, line) abort
+    let g:fzy_lines = a:line
+    if !empty(a:line)
+        let linenr = s:strip(split(split(a:line, "\t")[0], ":")[-1])
+        execute printf("%s +%s %s", a:editcmd, linenr, a:path)
+    endif
+endfunction
+
+function! s:fzy_outline() abort
+    try
+        let s:source = 'outline'
+        let tag_cmds = [
+                    \ printf('%s -f - --sort=no --excmd=number --language-force=%s %s 2>/dev/null', g:fzy_ctags, &filetype, expand('%:S')),
+                    \ printf('%s -f - --sort=no --excmd=number %s 2>/dev/null', g:fzy_ctags, expand('%:S'))
+                    \ ]
+        call fzy#start(s:fzy_outline_source(tag_cmds), funcref('s:fzy_outline_sink', [expand('%:p'), 'edit']), s:fzy_opts({ 'prompt': 'Outline> ' }))
+    catch
+        call s:warn(v:exception)
+    endtry
+endfunction
+
+command! FzyOutline call s:fzy_outline()
+
+let g:loaded_fzy_settings_vim = 1
