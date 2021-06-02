@@ -7,10 +7,6 @@ if get(g:, 'loaded_fzy_settings_vim', 0)
     finish
 endif
 
-let g:fzy_find_tool    = get(g:, 'fzy_find_tool', 'rg')
-let g:fzy_follow_links = get(g:, 'fzy_follow_links', 0)
-let s:fzy_follow_links = g:fzy_follow_links
-
 " Check if Popup/Floating Win is available for FZF or not
 if has('nvim')
     let s:has_popup = exists('*nvim_win_set_config') && has('nvim-0.4.2')
@@ -42,20 +38,112 @@ endfunction
 let g:fzy_ctags        = get(g:, 'fzy_ctags', 'ctags')
 let g:fzy_ctags_ignore = get(g:, 'fzy_ctags_ignore', expand('~/.ctagsignore'))
 
-let g:fzy_tags_command = printf('%s -R', g:fzy_ctags)
-if s:IsUniversalCtags(g:fzy_ctags) && filereadable(g:fzy_ctags_ignore)
+if get(g:, 'fzf_universal_ctags', s:IsUniversalCtags(g:fzy_ctags)) && filereadable(g:fzy_ctags_ignore)
     let g:fzy_tags_command = printf('%s --exclude=@%s -R', g:fzy_ctags, g:fzy_ctags_ignore)
+else
+    let g:fzy_tags_command = printf('%s -R', g:fzy_ctags)
 endif
 
+let g:fzy_file_root_markers = [
+            \ 'Gemfile',
+            \ 'rebar.config',
+            \ 'mix.exs',
+            \ 'Cargo.toml',
+            \ 'shard.yml',
+            \ 'go.mod',
+            \ ]
+
+let g:fzy_root_markers = ['.git', '.hg', '.svn', '.bzr', '_darcs'] + g:fzy_file_root_markers
+
+let s:fzy_ignored_root_dirs = [
+            \ '/',
+            \ '/root',
+            \ '/Users',
+            \ '/home',
+            \ '/usr',
+            \ '/usr/local',
+            \ '/opt',
+            \ '/etc',
+            \ '/var',
+            \ expand('~'),
+            \ ]
+
+let s:fzy_ignored_root_dirs = [
+            \ '/',
+            \ '/root',
+            \ '/Users',
+            \ '/home',
+            \ '/usr',
+            \ '/usr/local',
+            \ '/opt',
+            \ '/etc',
+            \ '/var',
+            \ expand('~'),
+            \ ]
+
+function! s:find_project_dir(starting_dir) abort
+    if empty(a:starting_dir)
+        return ''
+    endif
+
+    let l:root_dir = ''
+
+    for l:root_marker in g:fzy_root_markers
+        if index(g:fzy_file_root_markers, l:root_marker) > -1
+            let l:root_dir = findfile(l:root_marker, a:starting_dir . ';')
+        else
+            let l:root_dir = finddir(l:root_marker, a:starting_dir . ';')
+        endif
+        let l:root_dir = substitute(l:root_dir, l:root_marker . '$', '', '')
+
+        if strlen(l:root_dir)
+            let l:root_dir = fnamemodify(l:root_dir, ':p:h')
+            break
+        endif
+    endfor
+
+    if empty(l:root_dir) || index(s:ctrlp_ignored_root_dirs, l:root_dir) > -1
+        if index(s:ctrlp_ignored_root_dirs, getcwd()) > -1
+            let l:root_dir = a:starting_dir
+        elseif stridx(a:starting_dir, getcwd()) == 0
+            let l:root_dir = getcwd()
+        else
+            let l:root_dir = a:starting_dir
+        endif
+    endif
+
+    return fnamemodify(l:root_dir, ':p:~')
+endfunction
+
+command! FzyFindRoot execute 'FzyFind' s:find_project_dir(expand('%:p:h'))
+
 let s:fzy_available_commands = filter(['rg', 'fd'], 'executable(v:val)')
+
+if empty(s:fzy_available_commands)
+    command! -nargs=? -complete=dir FzyFindAll FzyFind <args>
+endif
+
+let g:fzy_find_tool    = get(g:, 'fzy_find_tool', 'rg')
+let g:fzy_follow_links = get(g:, 'fzy_follow_links', 0)
+let s:fzy_follow_links = g:fzy_follow_links
+let g:fzy_no_ignores   = get(g:, 'fzy_no_ignores', 0)
+let s:fzy_no_ignores   = g:fzy_no_ignores
 
 let s:fzy_find_commands = {
             \ 'rg': 'rg --files --color never --no-ignore-vcs --ignore-dot --ignore-parent --hidden',
             \ 'fd': 'fd --type file --color never --no-ignore-vcs --hidden',
             \ }
 
+let s:fzy_find_all_commands = {
+            \ 'rg': 'rg %s --files --color never --no-ignore --hidden',
+            \ 'fd': 'fd --base-directory %s --type file --color never --no-ignore --hidden',
+            \ }
+
 function! s:build_fzy_find_command() abort
     let l:cmd = s:fzy_find_commands[s:fzy_current_command]
+    if s:fzy_no_ignores
+        let l:cmd = s:fzy_find_all_commands[s:fzy_current_command]
+    endif
     if s:fzy_follow_links
         let l:cmd .= ' --follow'
     endif
@@ -110,32 +198,35 @@ endfunction
 
 command! ToggleFzyFollowLinks call <SID>toggle_fzy_follow_links()
 
-call s:detect_fzy_current_command()
-call s:build_fzy_find_command()
-
-function! s:find_project_dir(starting_path) abort
-    if empty(a:starting_path)
-        return ''
+function! s:toggle_fzy_no_ignores() abort
+    if s:fzy_no_ignores == 0
+        let s:fzy_no_ignores = 1
+        echo 'Fzy does not respect ignores!'
+    else
+        let s:fzy_no_ignores = 0
+        echo 'Fzy respects ignore!'
     endif
-
-    for root_marker in ['.git', '.hg', '.svn']
-        let root_dir = finddir(root_marker, a:starting_path . ';')
-        if empty(root_dir)
-            continue
-        endif
-
-        let root_dir = substitute(root_dir, root_marker, '', '')
-        if !empty(root_dir)
-            let root_dir = fnamemodify(root_dir, ':p:~:.')
-        endif
-
-        return root_dir
-    endfor
-
-    return ''
+    call s:build_fzy_find_command()
 endfunction
 
-command! FzyFindRoot execute 'FzyFind' s:find_project_dir(expand('%:p:h'))
+command! ToggleFzyNoIgnores call <SID>toggle_fzy_no_ignores()
+
+function! s:fzy_find_all(dir) abort
+    let current = s:fzy_no_ignores
+    try
+        let s:fzy_no_ignores = 1
+        call s:build_fzy_find_command()
+        execute 'FzyFind' a:dir
+    finally
+        let s:fzy_no_ignores = current
+        call s:build_fzy_find_command()
+    endtry
+endfunction
+
+command! -nargs=? -complete=dir FzyFindAll call <SID>fzy_find_all(<q-args>)
+
+call s:detect_fzy_current_command()
+call s:build_fzy_find_command()
 
 " Extra commands
 
