@@ -135,8 +135,8 @@ let s:fzy_find_commands = {
             \ }
 
 let s:fzy_find_all_commands = {
-            \ 'rg': 'rg %s --files --color never --no-ignore --hidden',
-            \ 'fd': 'fd --base-directory %s --type file --color never --no-ignore --hidden',
+            \ 'rg': 'rg --files --color never --no-ignore --hidden',
+            \ 'fd': 'fd --type file --color never --no-ignore --hidden',
             \ }
 
 function! s:build_fzy_find_command() abort
