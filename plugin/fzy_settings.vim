@@ -292,6 +292,29 @@ function! s:fzy_bufopen(e) abort
     call cursor(linenr, col)
 endfunction
 
+function! s:no_highlight(text) abort
+    return "\x1b[m" . a:text
+endfunction
+
+function! s:buffer_line_handler(line) abort
+  normal! m'
+  execute split(a:line, '\t')[0]
+  normal! ^zvzz
+endfunction
+
+function! s:buffer_lines() abort
+    let linefmt = " %4d " . "\t%s"
+    let fmtexpr = 'printf(linefmt, v:key + 1, s:no_highlight(v:val))'
+    let lines = getline(1, '$')
+    return map(lines, fmtexpr)
+endfunction
+
+function! s:fzy_buf_lines() abort
+    call fzy#start(<SID>buffer_lines(), funcref('s:buffer_line_handler'), s:fzy_opts({ 'prompt': 'BufLines> ' }))
+endfunction
+
+command! FzyBufLines call <SID>fzy_buf_lines()
+
 function! s:fzy_jumplist() abort
     return split(call('execute', ['jumps']), '\n')[1:]
 endfunction
@@ -405,7 +428,7 @@ function! s:fzy_outline_format(lists) abort
         let line = s:strip(getline(linenr))
         call add(l:result, [
                     \ printf("%s:%s", list[-1], printf(l:format, linenr)),
-                    \ substitute(line, list[0], list[0], '')
+                    \ s:no_highlight(substitute(line, list[0], list[0], ''))
                     \ ])
     endfor
     return l:result
