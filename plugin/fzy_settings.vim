@@ -110,6 +110,8 @@ command! -nargs=? -complete=dir FzyFindAll call fzy_settings#find_all(<q-args>)
 
 command! ToggleFzyFollowLinks call <SID>toggle_fzy_follow_links()
 
+command! FzyMru          call fzy_settings#mru()
+command! FzyMruInCwd     call fzy_settings#mru_in_cwd()
 command! FzyBufferLines  call fzy_settings#buffer_lines()
 command! FzyBufferTag    call fzy_settings#buffer_tag()
 command! FzyOutline      call fzy_settings#outline()
