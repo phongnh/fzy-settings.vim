@@ -32,6 +32,31 @@ function! s:opts(title, space = 0) abort
 endfunction
 
 " ------------------------------------------------------------------
+" FzyBufLines
+" ------------------------------------------------------------------
+function! s:buflines_sink(line) abort
+  normal! m'
+  execute split(a:line, '\t')[0]
+  normal! ^zvzz
+endfunction
+
+function! s:buflines_source() abort
+    let linefmt = " %4d " . "\t%s"
+    let fmtexpr = 'printf(linefmt, v:key + 1, s:no_highlight(v:val))'
+    let lines = getline(1, '$')
+    return map(lines, fmtexpr)
+endfunction
+
+function! fzy_settings#buflines() abort
+    let items = s:buflines_source()
+    if empty(items)
+        call s:warn('No lines!')
+        return
+    endif
+    call fzy#Start(items, funcref('s:buflines_sink'), s:fzy_opts({ 'prompt': 'BufLines> ' }))
+endfunction
+
+" ------------------------------------------------------------------
 " FzyQuickfix
 " FzyLocationList
 " ------------------------------------------------------------------
