@@ -118,9 +118,10 @@ function! s:setup_fzy_settings() abort
     call s:build_find_all_command()
     call s:build_find_command()
     call s:build_grep_command()
+    call s:update_popup_settings()
 endfunction
 
-function! s:update_fzy_settings()
+function! s:update_popup_settings()
     let l:use_popup = g:fzy_popup && winwidth(0) >= 120 ? v:true : v:false
     call extend(g:fzy, {
                 \ 'lines': l:use_popup ? 15 : 10,
@@ -131,7 +132,7 @@ endfunction
 augroup FzySettings
     autocmd!
     autocmd VimEnter * call <SID>setup_fzy_settings()
-    autocmd VimResized * call <SID>update_fzy_settings()
+    autocmd VimResized * call <SID>update_popup_settings()
 augroup END
 
 let g:loaded_fzy_settings_vim = 1
