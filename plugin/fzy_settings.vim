@@ -21,7 +21,6 @@ let g:fzy = {
 
 let g:fzy_find_tool    = get(g:, 'fzy_find_tool', 'fd')
 let g:fzy_follow_links = get(g:, 'fzy_follow_links', 0)
-let g:fzy_no_ignores   = get(g:, 'fzy_no_ignores', 0)
 
 " Check if Popup/Floating Win is available
 if (has('nvim') && exists('*nvim_open_win') && has('nvim-0.4.2')) ||
