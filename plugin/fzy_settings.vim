@@ -92,7 +92,7 @@ endfunction
 
 function! s:toggle_fzy_follow_links() abort
     if g:fzy_follow_links == 0
-        let s:fzy_follow_links = 1
+        let g:fzy_follow_links = 1
         echo 'Fzy follows symlinks!'
     else
         let g:fzy_follow_links = 0
