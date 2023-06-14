@@ -420,60 +420,6 @@ else
     endfunction
 endif
 
-function! s:fzy_outline_format(lists) abort
-    let l:result = []
-    let l:format = printf('%%%ds', len(string(line('$'))))
-    for list in a:lists
-        let linenr = list[2][:len(list[2])-3]
-        let line = s:strip(getline(linenr))
-        call add(l:result, [
-                    \ printf("%s:%s", list[-1], printf(l:format, linenr)),
-                    \ s:no_highlight(substitute(line, list[0], list[0], ''))
-                    \ ])
-    endfor
-    return l:result
-endfunction
-
-function! s:fzy_outline_source(tag_cmds) abort
-    if !filereadable(expand('%'))
-        throw 'Save the file first'
-    endif
-    let lines = []
-    for cmd in a:tag_cmds
-        let lines = split(system(cmd), "\n")
-        if !v:shell_error && len(lines)
-            break
-        endif
-    endfor
-    if v:shell_error
-        throw get(lines, 0, 'Failed to extract tags')
-    elseif empty(lines)
-        throw 'No tags found'
-    endif
-    return map(s:fzy_outline_format(map(lines, 'split(v:val, "\t")')), 'join(v:val, "\t")')
-endfunction
-
-function! s:fzy_outline_sink(path, editcmd, line) abort
-    let g:fzy_lines = a:line
-    if !empty(a:line)
-        let linenr = s:strip(split(split(a:line, "\t")[0], ":")[-1])
-        execute printf("%s +%s %s", a:editcmd, linenr, a:path)
-    endif
-endfunction
-
-function! s:fzy_outline() abort
-    try
-        let s:source = 'outline'
-        let tag_cmds = [
-                    \ printf('%s -f - --sort=no --excmd=number --language-force=%s %s 2>/dev/null', g:fzy_ctags, &filetype, expand('%:S')),
-                    \ printf('%s -f - --sort=no --excmd=number %s 2>/dev/null', g:fzy_ctags, expand('%:S'))
-                    \ ]
-        call fzy#start(s:fzy_outline_source(tag_cmds), funcref('s:fzy_outline_sink', [expand('%:p'), 'edit']), s:fzy_opts({ 'prompt': 'Outline> ' }))
-    catch
-        call s:warn(v:exception)
-    endtry
-endfunction
-
-command! FzyOutline call s:fzy_outline()
+command! FzyOutline call fzy_settings#outline()
 
 let g:loaded_fzy_settings_vim = 1
