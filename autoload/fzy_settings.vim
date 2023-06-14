@@ -26,10 +26,6 @@ function! s:align_lists(lists)
     return a:lists
 endfunction
 
-function! s:no_highlight(text) abort
-    return "\x1b[m" . a:text
-endfunction
-
 if exists('*trim')
     function! s:trim(str) abort
         return trim(a:str)
@@ -69,7 +65,7 @@ endfunction
 
 function! s:buffer_lines_source() abort
     let linefmt = " %4d " . "\t%s"
-    let fmtexpr = 'printf(linefmt, v:key + 1, s:no_highlight(v:val))'
+    let fmtexpr = 'printf(linefmt, v:key + 1, s:codes.reset . v:val)'
     let lines = getline(1, '$')
     return map(lines, fmtexpr)
 endfunction
