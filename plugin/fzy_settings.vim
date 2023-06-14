@@ -105,7 +105,6 @@ endfunction
 command! -nargs=? -complete=dir FzyFindAll call fzy_settings#find_all(<q-args>)
 
 command! ToggleFzyFollowLinks call <SID>toggle_fzy_follow_links()
-command! ToggleFzyNoIgnores   call <SID>toggle_fzy_no_ignores()
 
 command! FzyBufferLines  call fzy_settings#buffer_lines()
 command! FzyQuickfix     call fzy_settings#quickfix()
