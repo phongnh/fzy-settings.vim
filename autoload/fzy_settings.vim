@@ -1,8 +1,29 @@
+" https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
+let s:codes = {
+            \ 'reset': "\x1b[0m",
+            \ 'blue':  "\x1b[34m",
+            \ }
+
 function! s:warn(message) abort
     echohl WarningMsg
     echomsg a:message
     echohl None
     return 0
+endfunction
+
+function! s:align_lists(lists)
+    let maxes = {}
+    for list in a:lists
+        let i = 0
+        while i < len(list)
+            let maxes[i] = max([get(maxes, i, 0), len(list[i])])
+            let i += 1
+        endwhile
+    endfor
+    for list in a:lists
+        call map(list, "printf('%-'.maxes[v:key].'s', v:val)")
+    endfor
+    return a:lists
 endfunction
 
 function! s:no_highlight(text) abort
@@ -63,6 +84,110 @@ function! fzy_settings#buffer_lines() abort
 endfunction
 
 " ------------------------------------------------------------------
+" FzyBufferTag
+" ------------------------------------------------------------------
+" columns: tag | filename | linenr | kind | ref
+function! s:buffer_tag_format(columns) abort
+    let format = printf('%%%ds', len(string(line('$'))))
+    let linenr = a:columns[2][:len(a:columns[2])-3]
+    return extend([printf(format, linenr)], [s:codes.reset . s:codes.blue . a:columns[0] . s:codes.reset, a:columns[-2], a:columns[-1]])
+endfunction
+
+function! s:buffer_tag_source(tag_cmds) abort
+    if !filereadable(expand('%'))
+        throw 'Save the file first'
+    endif
+
+    let lines = []
+    for cmd in a:tag_cmds
+        let lines = split(system(cmd), "\n")
+        if !v:shell_error && len(lines)
+            break
+        endif
+    endfor
+    if v:shell_error
+        throw get(lines, 0, 'Failed to extract tags')
+    elseif empty(lines)
+        throw 'No tags found'
+    endif
+    return map(s:align_lists(map(lines, 's:buffer_tag_format(split(v:val, "\t"))')), 'join(v:val, "\t")')
+endfunction
+
+function! s:buffer_tag_sink(path, editcmd, line) abort
+    if !empty(a:line)
+        let linenr = s:trim(split(a:line, "\t")[0])
+        execute printf("%s +%s %s", a:editcmd, linenr, a:path)
+    endif
+endfunction
+
+function! fzy_settings#buffer_tag() abort
+    try
+        let filetype = get({ 'cpp': 'c++' }, &filetype, &filetype)
+        let filename = expand('%:S')
+        let sort = executable('sort') ? '| sort -s -k 5' : ''
+        let tag_cmds = [
+                    \ printf('%s -f - --sort=no --excmd=number --language-force=%s %s 2>/dev/null %s', g:fzy_ctags, filetype, filename, sort),
+                    \ printf('%s -f - --sort=no --excmd=number %s 2>/dev/null %s', g:fzy_ctags, filename, sort)
+                    \ ]
+        call fzy#Start(s:buffer_tag_source(tag_cmds), funcref('s:buffer_tag_sink', [expand('%:p'), 'edit']), s:opts('BufTag: ' . expand('%')))
+    catch
+        call s:warn(v:exception)
+    endtry
+endfunction
+
+" ------------------------------------------------------------------
+" FzyOutline
+" ------------------------------------------------------------------
+" columns: tag | filename | linenr | kind | ref
+function! s:outline_format(columns) abort
+    let format = printf('%%%ds', len(string(line('$'))))
+    let linenr = a:columns[2][:len(a:columns[2])-3]
+    let line = s:trim(getline(linenr))
+    return extend([printf(format, linenr)], [s:codes.reset . substitute(line, a:columns[0], s:codes.blue . a:columns[0] . s:codes.reset, '')])
+endfunction
+
+function! s:outline_source(tag_cmds) abort
+    if !filereadable(expand('%'))
+        throw 'Save the file first'
+    endif
+
+    let lines = []
+    for cmd in a:tag_cmds
+        let lines = split(system(cmd), "\n")
+        if !v:shell_error && len(lines)
+            break
+        endif
+    endfor
+    if v:shell_error
+        throw get(lines, 0, 'Failed to extract tags')
+    elseif empty(lines)
+        throw 'No tags found'
+    endif
+    return map(map(lines, 's:outline_format(split(v:val, "\t"))'), 'join(v:val, "\t")')
+endfunction
+
+function! s:outline_sink(path, editcmd, line) abort
+    if !empty(a:line)
+        let linenr = s:trim(split(a:line, "\t")[0])
+        execute printf("%s +%s %s", a:editcmd, linenr, a:path)
+    endif
+endfunction
+
+function! fzy_settings#outline() abort
+    try
+        let filetype = get({ 'cpp': 'c++' }, &filetype, &filetype)
+        let filename = expand('%:S')
+        let tag_cmds = [
+                    \ printf('%s -f - --sort=no --excmd=number --language-force=%s %s 2>/dev/null', g:fzy_ctags, filetype, filename),
+                    \ printf('%s -f - --sort=no --excmd=number %s 2>/dev/null', g:fzy_ctags, filename)
+                    \ ]
+        call fzy#Start(s:outline_source(tag_cmds), funcref('s:outline_sink', [expand('%:p'), 'edit']), s:opts('Outline: ' . expand('%')))
+    catch
+        call s:warn(v:exception)
+    endtry
+endfunction
+
+" ------------------------------------------------------------------
 " FzyQuickfix
 " FzyLocationList
 " ------------------------------------------------------------------
@@ -107,64 +232,6 @@ function! fzy_settings#location_list() abort
     let title = get(getloclist(0, { 'title': 1 }), 'title', '')
     let title = 'LocationList' . (strlen(title) ? ': ' : '') . title
     call fzy#Start(items, funcref('s:quickfix_sink'), s:opts(title))
-endfunction
-
-" ------------------------------------------------------------------
-" FzyOutline
-" ------------------------------------------------------------------
-function! s:outline_format(lists) abort
-    let l:result = []
-    let l:format = printf('%%%ds', len(string(line('$'))))
-    for list in a:lists
-        let linenr = list[2][:len(list[2])-3]
-        let line = s:trim(getline(linenr))
-        call add(l:result, [
-                    \ printf("%s:%s", list[-1], printf(l:format, linenr)),
-                    \ s:no_highlight(substitute(line, list[0], list[0], ''))
-                    \ ])
-    endfor
-    return l:result
-endfunction
-
-function! s:outline_source(tag_cmds) abort
-    if !filereadable(expand('%'))
-        throw 'Save the file first'
-    endif
-    let lines = []
-    for cmd in a:tag_cmds
-        let lines = split(system(cmd), "\n")
-        if !v:shell_error && len(lines)
-            break
-        endif
-    endfor
-    if v:shell_error
-        throw get(lines, 0, 'Failed to extract tags')
-    elseif empty(lines)
-        throw 'No tags found'
-    endif
-    return map(s:outline_format(map(lines, 'split(v:val, "\t")')), 'join(v:val, "\t")')
-endfunction
-
-function! s:outline_sink(path, editcmd, line) abort
-    let g:fzy_lines = a:line
-    if !empty(a:line)
-        let linenr = s:trim(split(split(a:line, "\t")[0], ":")[-1])
-        execute printf("%s +%s %s", a:editcmd, linenr, a:path)
-    endif
-endfunction
-
-function! fzy_settings#outline() abort
-    try
-        let filetype = get({ 'cpp': 'c++' }, &filetype, &filetype)
-        let filename = expand('%:S')
-        let tag_cmds = [
-                    \ printf('%s -f - --sort=no --excmd=number --language-force=%s %s 2>/dev/null', g:fzy_ctags, filetype, filename),
-                    \ printf('%s -f - --sort=no --excmd=number %s 2>/dev/null', g:fzy_ctags, filename)
-                    \ ]
-        call fzy#Start(s:outline_source(tag_cmds), funcref('s:outline_sink', [expand('%:p'), 'edit']), s:opts('Outline: ' . expand('%')))
-    catch
-        call s:warn(v:exception)
-    endtry
 endfunction
 
 " ------------------------------------------------------------------
