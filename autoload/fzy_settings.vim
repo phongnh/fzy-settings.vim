@@ -32,6 +32,18 @@ function! s:opts(title, space = 0) abort
 endfunction
 
 " ------------------------------------------------------------------
+" FzyFindAll
+" ------------------------------------------------------------------
+function! fzy_settings#find_all(dir) abort
+    try
+        let g:fzy.findcmd = g:fzy_find_all_command
+        execute 'FzyFind ' a:dir
+    finally
+        let g:fzy.findcmd = g:fzy_find_command
+    endtry
+endfunction
+
+" ------------------------------------------------------------------
 " FzyBufLines
 " ------------------------------------------------------------------
 function! s:buflines_sink(line) abort
@@ -78,7 +90,7 @@ function! s:quickfix_source() abort
 endfunction
 
 function! fzy_settings#quickfix() abort
-    let items = <SID>quickfix_sources()
+    let items = s:quickfix_source()
     if empty(items)
         call s:warn('No quickfix items!')
         return
@@ -91,7 +103,7 @@ function! s:location_list_source() abort
 endfunction
 
 function! fzy_settings#location_list() abort
-    let items = <sid>location_list_source()
+    let items = s:location_list_source()
     if empty(items)
         call s:warn('No location list items!')
         return

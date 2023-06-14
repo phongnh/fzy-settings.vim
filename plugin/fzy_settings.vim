@@ -7,27 +7,34 @@ if get(g:, 'loaded_fzy_settings_vim', 0)
     finish
 endif
 
-" Check if Popup/Floating Win is available for FZF or not
-if has('nvim')
-    let s:has_popup = exists('*nvim_win_set_config') && has('nvim-0.4.2')
+let g:fzy = {
+            \ 'prompt': '> ',
+            \ 'showinfo': v:true,
+            \ 'term_highlight': 'NormalDark',
+            \ 'popup': {
+            \   'minwidth': 120,
+            \   'highlight': 'NormalDark',
+            \   'borderhighlight': ['GreyDark'],
+            \   'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
+            \ },
+            \ }
+
+let g:fzy_find_tool    = get(g:, 'fzy_find_tool', 'fd')
+let g:fzy_follow_links = get(g:, 'fzy_follow_links', 0)
+let g:fzy_no_ignores   = get(g:, 'fzy_no_ignores', 0)
+
+" Check if Popup/Floating Win is available
+if (has('nvim') && exists('*nvim_open_win') && has('nvim-0.4.2')) ||
+            \ (exists('*popup_create') && has('patch-8.2.191'))
+    let g:fzy_popup = v:true
 else
-    let s:has_popup = exists('*popup_create') && has('patch-8.2.0204')
+    let g:fzy_popup = v:false
 endif
 
-let g:fzy = {
-            \ 'lines':  15,
-            \ 'prompt': '>>> ',
-            \ 'popupwin': get(g:, 'fzy_popup', 1) && s:has_popup ? v:true : v:false,
-            \ }
+let g:fzy_ctags        = get(g:, 'fzy_ctags', 'ctags')
+let g:fzy_ctags_ignore = get(g:, 'fzy_ctags_ignore', expand('~/.ctagsignore'))
 
-let g:fzy.popup = {
-            \   'padding':     [0, 1, 0, 1],
-            \   'borders':     [0, 0, 0, 0],
-            \   'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
-            \   'minwidth':    90,
-            \ }
-
-function! s:IsUniversalCtags(ctags_path) abort
+function! s:is_universal_ctags(ctags_path) abort
     try
         return system(printf('%s --version', a:ctags_path)) =~# 'Universal Ctags'
     catch
@@ -35,151 +42,71 @@ function! s:IsUniversalCtags(ctags_path) abort
     endtry
 endfunction
 
-let g:fzy_ctags        = get(g:, 'fzy_ctags', 'ctags')
-let g:fzy_ctags_ignore = get(g:, 'fzy_ctags_ignore', expand('~/.ctagsignore'))
-
-if get(g:, 'fzf_universal_ctags', s:IsUniversalCtags(g:fzy_ctags)) && filereadable(g:fzy_ctags_ignore)
+if get(g:, 'fzy_universal_ctags', s:is_universal_ctags(g:fzy_ctags)) && filereadable(g:fzy_ctags_ignore)
     let g:fzy_tags_command = printf('%s --exclude=@%s -R', g:fzy_ctags, g:fzy_ctags_ignore)
 else
     let g:fzy_tags_command = printf('%s -R', g:fzy_ctags)
 endif
 
-let s:fzy_available_commands = filter(['rg', 'fd'], 'executable(v:val)')
+function! s:build_find_command() abort
+    let find_commands = {
+                \ 'fd': 'fd --type file --color never --no-ignore-vcs --hidden --strip-cwd-prefix',
+                \ 'rg': 'rg --files --color never --no-ignore-vcs --ignore-dot --ignore-parent --hidden',
+                \ }
 
-if empty(s:fzy_available_commands)
-    command! -nargs=? -complete=dir FzyFindAll FzyFind <args>
-endif
-
-let g:fzy_find_tool    = get(g:, 'fzy_find_tool', 'rg')
-let g:fzy_follow_links = get(g:, 'fzy_follow_links', 0)
-let s:fzy_follow_links = g:fzy_follow_links
-let g:fzy_no_ignores   = get(g:, 'fzy_no_ignores', 0)
-let s:fzy_no_ignores   = g:fzy_no_ignores
-
-let s:fzy_find_commands = {
-            \ 'rg': 'rg --files --color never --no-ignore-vcs --ignore-dot --ignore-parent --hidden',
-            \ 'fd': 'fd --type file --color never --no-ignore-vcs --hidden',
-            \ }
-
-let s:fzy_find_all_commands = {
-            \ 'rg': 'rg --files --color never --no-ignore --hidden',
-            \ 'fd': 'fd --type file --color never --no-ignore --hidden',
-            \ }
-
-function! s:build_fzy_find_command() abort
-    let l:cmd = s:fzy_find_commands[s:fzy_current_command]
-    if s:fzy_no_ignores
-        let l:cmd = s:fzy_find_all_commands[s:fzy_current_command]
+    if g:fzy_follow_links
+        call map(find_commands, 'v:val . " --follow"')
     endif
-    if s:fzy_follow_links
-        let l:cmd .= ' --follow'
-    endif
-    let g:fzy.findcmd = l:cmd
-    return l:cmd
-endfunction
 
-function! s:detect_fzy_current_command() abort
-    let idx = index(s:fzy_available_commands, g:fzy_find_tool)
-    let s:fzy_current_command = get(s:fzy_available_commands, idx > -1 ? idx : 0)
-endfunction
-
-function! s:print_fzy_current_command_info() abort
-    echo 'Fzy is using command `' . s:fzy_file_command . '`!'
-endfunction
-
-command! PrintFzyCurrentCommandInfo call <SID>print_fzy_current_command_info()
-
-function! s:change_fzy_find_command(bang, command) abort
-    " Reset to default command
-    if a:bang
-        call s:detect_fzy_current_command()
-    elseif strlen(a:command)
-        if index(s:fzy_available_commands, a:command) == -1
-            return
-        endif
-        let s:fzy_current_command = a:command
+    if g:fzy_find_tool ==# 'rg' && executable('rg')
+        let g:fzy_find_command = find_commands['rg']
     else
-        let idx = index(s:fzy_available_commands, s:fzy_current_command)
-        let s:fzy_current_command = get(s:fzy_available_commands, idx + 1, s:fzy_available_commands[0])
+        let g:fzy_find_tool = 'fd'
+        let g:fzy_find_command = find_commands['fd']
     endif
-    call s:build_fzy_find_command()
-    call s:print_fzy_current_command_info()
+
+    call extend(g:fzy, { 'findcmd': g:fzy_find_command })
 endfunction
 
-function! s:list_fzy_available_commands(...) abort
-    return s:fzy_available_commands
+function! s:build_find_all_command() abort
+    let find_all_commands = {
+                \ 'fd': 'fd --type file --color never --no-ignore --hidden --follow --strip-cwd-prefix',
+                \ 'rg': 'rg --files --color never --no-ignore --hidden --follow',
+                \ }
+
+    if g:fzy_find_tool ==# 'rg' && executable('rg')
+        let g:fzy_find_all_command = find_all_commands['rg']
+    else
+        let g:fzy_find_tool = 'fd'
+        let g:fzy_find_all_command = find_all_commands['fd']
+    endif
+
+    call extend(g:fzy, { 'findcmd': g:fzy_find_all_command })
 endfunction
 
-command! -nargs=? -bang -complete=customlist,<SID>list_fzy_available_commands ChangeFzyFindCommand call <SID>change_fzy_find_command(<bang>0, <q-args>)
+function! s:build_grep_command() abort
+    let g:fzy_grep_command = 'rg --color=never -H --no-heading --line-number --smart-case --hidden'
+    let g:fzy_grep_command .= g:fzy_follow_links ? ' --follow' : ''
+    let g:fzy_grep_command .= get(g:, 'fzy_grep_ignore_vcs', 0) ? ' --no-ignore-vcs' : ''
+    call extend(g:fzy, { 'grepcmd': g:fzy_grep_command, 'grepformat': '%f:%l:%m' })
+endfunction
 
 function! s:toggle_fzy_follow_links() abort
-    if s:fzy_follow_links == 0
+    if g:fzy_follow_links == 0
         let s:fzy_follow_links = 1
         echo 'Fzy follows symlinks!'
     else
-        let s:fzy_follow_links = 0
+        let g:fzy_follow_links = 0
         echo 'Fzy does not follow symlinks!'
     endif
-    call s:build_fzy_find_command()
+    call s:build_find_command()
+    call s:build_grep_command()
 endfunction
+
+command! -nargs=? -complete=dir FzyFindAll call fzy_settings#find_all(<q-args>)
 
 command! ToggleFzyFollowLinks call <SID>toggle_fzy_follow_links()
-
-function! s:toggle_fzy_no_ignores() abort
-    if s:fzy_no_ignores == 0
-        let s:fzy_no_ignores = 1
-        echo 'Fzy does not respect ignores!'
-    else
-        let s:fzy_no_ignores = 0
-        echo 'Fzy respects ignore!'
-    endif
-    call s:build_fzy_find_command()
-endfunction
-
-command! ToggleFzyNoIgnores call <SID>toggle_fzy_no_ignores()
-
-function! s:fzy_find_all(dir) abort
-    let current = s:fzy_no_ignores
-    try
-        let s:fzy_no_ignores = 1
-        call s:build_fzy_find_command()
-        execute 'FzyFind' a:dir
-    finally
-        let s:fzy_no_ignores = current
-        call s:build_fzy_find_command()
-    endtry
-endfunction
-
-command! -nargs=? -complete=dir FzyFindAll call <SID>fzy_find_all(<q-args>)
-
-call s:detect_fzy_current_command()
-call s:build_fzy_find_command()
-
-" Extra commands
-
-function! s:opts(title, space = 0) abort
-    let opts = get(g:, 'fzy', {})->copy()->extend({'statusline': a:title})
-    call get(opts, 'popup', {})->extend({'title': a:space ? ' ' .. a:title : a:title})
-    return opts
-endfunction
-
-function! s:find_cb(dir, vim_cmd, choice) abort
-    let fpath = fnamemodify(a:dir, ':p:s?/$??') .. '/' .. a:choice
-    let fpath = resolve(fpath)->fnamemodify(':.')->fnameescape()
-    call histadd('cmd', a:vim_cmd .. ' ' .. fpath)
-    call s:tryexe(a:vim_cmd .. ' ' .. fpath)
-endfunction
-
-function! s:open_file_cb(vim_cmd, choice) abort
-    const fname = fnameescape(a:choice)
-    call histadd('cmd', a:vim_cmd .. ' ' .. fname)
-    call s:tryexe(a:vim_cmd .. ' ' .. fname)
-endfunction
-
-function! s:open_tag_cb(vim_cmd, choice) abort
-    call histadd('cmd', a:vim_cmd .. ' ' .. a:choice)
-    call s:tryexe(a:vim_cmd .. ' ' .. escape(a:choice, '"'))
-endfunction
+command! ToggleFzyNoIgnores   call <SID>toggle_fzy_no_ignores()
 
 command! FzyBufLines     call fzy_settings#buflines()
 command! FzyQuickfix     call fzy_settings#quickfix()
@@ -188,5 +115,25 @@ command! FzyOutline      call fzy_settings#outline()
 command! FzyRegisters    call fzy_settings#registers()
 command! FzyMessages     call fzy_settings#messages()
 command! FzyJumps        call fzy_settings#jumps()
+
+function! s:setup_fzy_settings() abort
+    call s:build_find_all_command()
+    call s:build_find_command()
+    call s:build_grep_command()
+endfunction
+
+function! s:update_fzy_settings()
+    let l:use_popup = g:fzy_popup && winwidth(0) >= 120 ? v:true : v:false
+    call extend(g:fzy, {
+                \ 'lines': l:use_popup ? 15 : 10,
+                \ 'popupwin': l:use_popup,
+                \ })
+endfunction
+
+augroup FzySettings
+    autocmd!
+    autocmd VimEnter * call <SID>setup_fzy_settings()
+    autocmd VimResized * call <SID>update_fzy_settings()
+augroup END
 
 let g:loaded_fzy_settings_vim = 1
