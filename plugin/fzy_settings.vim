@@ -254,59 +254,12 @@ function! s:open_tag_cb(vim_cmd, choice) abort
     call s:tryexe(a:vim_cmd .. ' ' .. escape(a:choice, '"'))
 endfunction
 
-function! s:fzy_opts(opts) abort
-    let l:opts = extend({}, s:opts(''))
-    let l:opts = extend(l:opts, a:opts)
-    return l:opts
-endfunction
-
-function! s:warn(message) abort
-    echohl WarningMsg
-    echomsg a:message
-    echohl None
-    return 0
-endfunction
-
-function! s:fzy_bufopen(e) abort
-    let list = split(a:e)
-    if len(list) < 4
-        return
-    endif
-
-    let [linenr, col, file_text] = [list[1], list[2]+1, join(list[3:])]
-    let lines = getbufline(file_text, linenr)
-    let path = file_text
-    if empty(lines)
-        if stridx(join(split(getline(linenr))), file_text) == 0
-            let lines = [file_text]
-            let path = bufname('%')
-        elseif filereadable(path)
-            let lines = ['buffer unloaded']
-        else
-            " Skip.
-            return
-        endif
-    endif
-
-    execute 'edit '  . path
-    call cursor(linenr, col)
-endfunction
-
-function! s:fzy_jumplist() abort
-    return split(call('execute', ['jumps']), '\n')[1:]
-endfunction
-
-function! s:fzy_jumps() abort
-    call fzy#start(<SID>fzy_jumplist(), funcref('s:fzy_bufopen'), s:fzy_opts({ 'prompt': 'Jumps> ' }))
-endfunction
-
-command! FzyJumps call <SID>fzy_jumps()
-
 command! FzyBufLines     call fzy_settings#buflines()
 command! FzyQuickfix     call fzy_settings#quickfix()
 command! FzyLocationList call fzy_settings#location_list()
 command! FzyOutline      call fzy_settings#outline()
 command! FzyRegisters    call fzy_settings#registers()
 command! FzyMessages     call fzy_settings#messages()
+command! FzyJumps        call fzy_settings#jumps()
 
 let g:loaded_fzy_settings_vim = 1
