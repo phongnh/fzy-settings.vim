@@ -156,3 +156,26 @@ function! fzy_settings#registers() abort
     endif
     call fzy#Start(items, funcref('s:registers_sink'), s:fzy_opts({ 'prompt': 'Registers> ' }))
 endfunction
+
+" ------------------------------------------------------------------
+" FzyMessages
+" ------------------------------------------------------------------
+function! s:messages_sink(e) abort
+    let @" = a:e
+    echohl ModeMsg
+    echo 'Yanked!'
+    echohl None
+endfunction
+
+function! s:messages_source() abort
+    return split(call('execute', ['messages']), '\n')
+endfunction
+
+function! fzy_settings#messages() abort
+    let items = s:messages_source()
+    if empty(items)
+        call s:warn('No message items!')
+        return
+    endif
+    call fzy#Start(items, funcref('s:messages_sink'), s:fzy_opts({ 'prompt': 'Messages> ' }))
+endfunction
