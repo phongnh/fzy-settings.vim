@@ -19,15 +19,9 @@ else
     endfunction
 endif
 
-function! s:fzy_opts(opts) abort
-    let l:opts = extend({}, s:opts(''))
-    let l:opts = extend(l:opts, a:opts)
-    return l:opts
-endfunction
-
 function! s:opts(title, space = 0) abort
-    let opts = get(g:, 'fzy', {})->copy()->extend({'statusline': a:title})
-    call get(opts, 'popup', {})->extend({'title': a:space ? ' ' .. a:title : a:title})
+    let opts = get(g:, 'fzy', {})->copy()->extend({ 'statusline': a:title })
+    call get(opts, 'popup', {})->extend({ 'title': a:space ? ' ' .. a:title : a:title })
     return opts
 endfunction
 
@@ -65,7 +59,7 @@ function! fzy_settings#buffer_lines() abort
         call s:warn('No lines!')
         return
     endif
-    call fzy#Start(items, funcref('s:buffer_lines_sink'), s:fzy_opts({ 'prompt': 'BufLines> ' }))
+    call fzy#Start(items, funcref('s:buffer_lines_sink'), s:opts('BufLines: ' . expand('%')))
 endfunction
 
 " ------------------------------------------------------------------
@@ -95,7 +89,9 @@ function! fzy_settings#quickfix() abort
         call s:warn('No quickfix items!')
         return
     endif
-    call fzy#Start(items, funcref('s:quickfix_sink'), s:fzy_opts({ 'prompt': 'Quickfix> ' }))
+    let title = get(getqflist({ 'title': 1 }), 'title', '')
+    let title = 'Quickfix' . (strlen(title) ? ': ' : '') . title
+    call fzy#Start(items, funcref('s:quickfix_sink'), s:opts(title))
 endfunction
 
 function! s:location_list_source() abort
@@ -108,7 +104,9 @@ function! fzy_settings#location_list() abort
         call s:warn('No location list items!')
         return
     endif
-    call fzy#Start(items, funcref('s:quickfix_sink'), s:fzy_opts({ 'prompt': 'LocationList> ' }))
+    let title = get(getloclist(0, { 'title': 1 }), 'title', '')
+    let title = 'LocationList' . (strlen(title) ? ': ' : '') . title
+    call fzy#Start(items, funcref('s:quickfix_sink'), s:opts(title))
 endfunction
 
 " ------------------------------------------------------------------
@@ -163,7 +161,7 @@ function! fzy_settings#outline() abort
                     \ printf('%s -f - --sort=no --excmd=number --language-force=%s %s 2>/dev/null', g:fzy_ctags, filetype, filename),
                     \ printf('%s -f - --sort=no --excmd=number %s 2>/dev/null', g:fzy_ctags, filename)
                     \ ]
-        call fzy#Start(s:outline_source(tag_cmds), funcref('s:outline_sink', [expand('%:p'), 'edit']), s:fzy_opts({ 'prompt': 'Outline> ' }))
+        call fzy#Start(s:outline_source(tag_cmds), funcref('s:outline_sink', [expand('%:p'), 'edit']), s:opts('Outline: ' . expand('%')))
     catch
         call s:warn(v:exception)
     endtry
@@ -191,7 +189,7 @@ function! fzy_settings#registers() abort
         call s:warn('No register items!')
         return
     endif
-    call fzy#Start(items, funcref('s:registers_sink'), s:fzy_opts({ 'prompt': 'Registers> ' }))
+    call fzy#Start(items, funcref('s:registers_sink'), s:opts('Registers'))
 endfunction
 
 " ------------------------------------------------------------------
@@ -214,7 +212,7 @@ function! fzy_settings#messages() abort
         call s:warn('No message items!')
         return
     endif
-    call fzy#Start(items, funcref('s:messages_sink'), s:fzy_opts({ 'prompt': 'Messages> ' }))
+    call fzy#Start(items, funcref('s:messages_sink'), s:opts('Messages'))
 endfunction
 
 " ------------------------------------------------------------------
@@ -251,5 +249,5 @@ function! fzy_settings#jumps() abort
         call s:warn('No jump items!')
         return
     endif
-    call fzy#Start(items, funcref('s:jumps_sink'), s:fzy_opts({ 'prompt': 'Jumps> ' }))
+    call fzy#Start(items, funcref('s:jumps_sink'), s:opts('Jumps'))
 endfunction
