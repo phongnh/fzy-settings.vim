@@ -126,10 +126,11 @@ function! s:setup_fzy_settings() abort
 endfunction
 
 function! s:update_popup_settings()
-    let l:use_popup = g:fzy_popup && winwidth(0) >= 120 ? v:true : v:false
+    let l:popupwin = g:fzy_popup && winwidth(0) >= 120 ? v:true : v:false
+    let l:lines = l:popupwin ? (&lines >= 30 ? &lines / 2 : 15) : 10
     call extend(g:fzy, {
-                \ 'lines': l:use_popup ? 15 : 10,
-                \ 'popupwin': l:use_popup,
+                \ 'lines': l:lines,
+                \ 'popupwin': l:popupwin,
                 \ })
 endfunction
 
