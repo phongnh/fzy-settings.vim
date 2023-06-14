@@ -19,6 +19,10 @@ let g:fzy = {
             \ },
             \ }
 
+if get(g:, 'fzy_popup_borderchars', 'default') ==# 'round'
+    let g:fzy.popup.borderchars = ['─', '│', '─', '│', '╭', '╮', '╯', '╰']
+endif
+
 let g:fzy_find_tool    = get(g:, 'fzy_find_tool', 'fd')
 let g:fzy_follow_links = get(g:, 'fzy_follow_links', 0)
 
