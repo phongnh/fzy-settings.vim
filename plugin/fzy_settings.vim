@@ -386,40 +386,7 @@ endfunction
 command! FzyQuickfix call s:fzy_quickfix()
 command! FzyLocationList call s:fzy_location_list()
 
-function! s:fzy_yank_register(line) abort
-    call setreg('"', getreg(a:line[4]))
-    echohl ModeMsg
-    echo 'Yanked!'
-    echohl None
-endfunction
-
-function! s:fzy_get_registers() abort
-    let l:items = split(call('execute', ['registers']), '\n')[1:]
-    call map(l:items, 's:strip(v:val)')
-    return l:items
-endfunction
-
-function! s:fzy_registers() abort
-    let items = <SID>fzy_get_registers()
-    if len(items) == 0
-        call s:warn('No register items!')
-        return
-    endif
-    call fzy#start(items, funcref('s:fzy_yank_register'), s:fzy_opts({ 'prompt': 'Registers> ' }))
-endfunction
-
-command! FzyRegisters call s:fzy_registers()
-
-if exists('*trim')
-    function! s:strip(str) abort
-        return trim(a:str)
-    endfunction
-else
-    function! s:strip(str) abort
-        return substitute(a:str, '^\s*\(.\{-}\)\s*$', '\1', '')
-    endfunction
-endif
-
-command! FzyOutline call fzy_settings#outline()
+command! FzyRegisters call fzy_settings#registers()
+command! FzyOutline   call fzy_settings#outline()
 
 let g:loaded_fzy_settings_vim = 1
