@@ -325,68 +325,10 @@ endfunction
 
 command! FzyJumps call <SID>fzy_jumps()
 
-function! s:fzy_yank_sink(e) abort
-    let @" = a:e
-    echohl ModeMsg
-    echo 'Yanked!'
-    echohl None
-endfunction
-
-function! s:fzy_messages_source() abort
-    return split(call('execute', ['messages']), '\n')
-endfunction
-
-function! s:fzy_messages() abort
-    call fzy#start(<SID>fzy_messages_source(), funcref('s:fzy_yank_sink'), s:fzy_opts({ 'prompt': 'Messages> ' }))
-endfunction
-
-command! FzyMessages call <SID>fzy_messages()
-
-function! s:fzy_open_quickfix_item(e) abort
-    let line = a:e
-    let filename = fnameescape(split(line, ':\d\+:')[0])
-    let linenr = matchstr(line, ':\d\+:')[1:-2]
-    let colum = matchstr(line, '\(:\d\+\)\@<=:\d\+:')[1:-2]
-    execute 'e ' . filename
-    call cursor(linenr, colum)
-endfunction
-
-function! s:fzy_quickfix_to_grep(v) abort
-    return bufname(a:v.bufnr) . ':' . a:v.lnum . ':' . a:v.col . ':' . a:v.text
-endfunction
-
-function! s:fzy_get_quickfix() abort
-    return map(getqflist(), 's:fzy_quickfix_to_grep(v:val)')
-endfunction
-
-function! s:fzy_quickfix() abort
-    let s:source = 'quickfix'
-    let items = <SID>fzy_get_quickfix()
-    if len(items) == 0
-        call s:warn('No quickfix items!')
-        return
-    endif
-    call fzy#start(items, funcref('s:fzy_open_quickfix_item'), s:fzy_opts({ 'prompt': 'Quickfix> ' }))
-endfunction
-
-function! s:fzy_get_location_list() abort
-    return map(getloclist(0), 's:fzy_quickfix_to_grep(v:val)')
-endfunction
-
-function! s:fzy_location_list() abort
-    let s:source = 'location_list'
-    let items = <sid>fzy_get_location_list()
-    if len(items) == 0
-        call s:warn('No location list items!')
-        return
-    endif
-    call fzy#start(items, funcref('s:fzy_open_quickfix_item'), s:fzy_opts({ 'prompt': 'LocationList> ' }))
-endfunction
-
-command! FzyQuickfix call s:fzy_quickfix()
-command! FzyLocationList call s:fzy_location_list()
-
-command! FzyRegisters call fzy_settings#registers()
-command! FzyOutline   call fzy_settings#outline()
+command! FzyQuickfix     call fzy_settings#quickfix()
+command! FzyLocationList call fzy_settings#location_list()
+command! FzyOutline      call fzy_settings#outline()
+command! FzyRegisters    call fzy_settings#registers()
+command! FzyMessages     call fzy_settings#messages()
 
 let g:loaded_fzy_settings_vim = 1
