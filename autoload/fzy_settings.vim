@@ -1,7 +1,7 @@
 " https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
 let s:codes = {
-            \ 'reset': "\x1b[0m",
-            \ 'blue':  "\x1b[34m",
+            \ 'normal':  "\x1b[39m",
+            \ 'fg_blue': "\x1b[38;5;4m",
             \ }
 
 let s:nbs = nr2char(0xa0)
@@ -15,12 +15,14 @@ function! s:warn(message) abort
 endfunction
 
 function! s:blue(text) abort
-    return printf('%s%s%s', "\x1b[38;5;4m", a:text, "\x1b[39m")
+    return printf('%s%s%s', s:codes.fg_blue, a:text, s:codes.normal)
 endfunction
 
 function! s:clear_escape_sequence(text)
-    let text = substitute(a:text, "\x1b[38;5;4m", '', '')
-    let text = substitute(text, "\x1b[39m", '', '')
+    let text = a:text
+    for l:code in values(s:codes)
+        let text = substitute(text, l:code, '', '')
+    endfor
     return text
 endfunction
 
