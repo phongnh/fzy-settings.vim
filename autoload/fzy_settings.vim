@@ -351,7 +351,7 @@ function! s:commands_format(line) abort
     " let complete = line[13:22]
     let definition = s:trim(line[25:])
     let result = [
-                \ attr . s:trim(args) . s:nbs . s:blue(name),
+                \ attr . s:trim(args) . s:nbs . name,
                 \ s:trim(definition),
                 \ ]
     return result
@@ -363,7 +363,7 @@ function! s:commands_source() abort
 endfunction
 
 function! s:commands_sink(line) abort
-    let cmd = matchstr(s:clear_escape_sequence(a:line[7:]), '\zs\S*\ze')
+    let cmd = matchstr(a:line[7:], '\zs\S*\ze')
     call feedkeys(':' . cmd . (a:line[0] == '!' ? '' : ' '), 'n')
 endfunction
 
@@ -386,7 +386,7 @@ function! s:history_source(type) abort
     let max = histnr(a:type)
     let fmt = '%' . len(string(max)) . 'd'
     let list = filter(map(range(1, max), 'histget(a:type, -v:val)'), '!empty(v:val)')
-    return map(list, 'printf(fmt, v:key) . s:nbs . s:blue(v:val)')
+    return map(list, 'printf(fmt, v:key) . s:nbs . v:val')
 endfunction
 
 nnoremap <Plug>(-fzy-vim-do) :execute g:__fzy_command<CR>
@@ -394,7 +394,7 @@ nnoremap <Plug>(-fzy-/) /
 nnoremap <Plug>(-fzy-:) :
 
 function! s:history_sink(type, line) abort
-    let line = s:clear_escape_sequence(a:line)
+    let line = a:line
     let prefix = "\<Plug>(-fzy-" . a:type . ')'
     let item = matchstr(line, '\s*[0-9]\+' . s:nbs . '*\zs.*')
     if a:type == ':'
@@ -423,7 +423,7 @@ function! fzy_settings#search_history() abort
 endfunction
 
 function! s:history_edit_sink(type, line) abort
-    let line = s:clear_escape_sequence(a:line)
+    let line = a:line
     let prefix = "\<Plug>(-fzy-" . a:type . ')'
     let item = matchstr(line, '\s*[0-9]\+' . s:nbs . '*\zs.*')
     call histadd(a:type, item)
