@@ -185,10 +185,11 @@ endfunction
 " FzyBufferTag
 " ------------------------------------------------------------------
 " columns: tag | filename | linenr | kind | ref
-function! s:buffer_tag_format(columns) abort
-    let format = printf('%%%ds', len(string(line('$'))))
-    let linenr = a:columns[2][:len(a:columns[2])-3]
-    return extend([printf(format, linenr)], [s:codes.reset . s:codes.blue . a:columns[0] . s:codes.reset, a:columns[-2], a:columns[-1]])
+function! s:buffer_tag_format(line) abort
+    let columns = split(a:line, "\t")
+    let format = '%' . len(string(line('$'))) . 's'
+    let linenr = columns[2][:len(columns[2])-3]
+    return extend([printf(format, linenr)], [s:blue(columns[0]), columns[-2], columns[-1]])
 endfunction
 
 function! s:buffer_tag_source(tag_cmds) abort
@@ -208,14 +209,13 @@ function! s:buffer_tag_source(tag_cmds) abort
     elseif empty(lines)
         throw 'No tags found'
     endif
-    return map(s:align_lists(map(lines, 's:buffer_tag_format(split(v:val, "\t"))')), 'join(v:val, "\t")')
+    return map(s:align_lists(map(lines, 's:buffer_tag_format(v:val)')), 'join(v:val, s:tab)')
 endfunction
 
 function! s:buffer_tag_sink(path, editcmd, line) abort
-    if !empty(a:line)
-        let linenr = s:trim(split(a:line, "\t")[0])
-        execute printf("%s +%s %s", a:editcmd, linenr, a:path)
-    endif
+    let line = s:clear_escape_sequence(a:line)
+    let linenr = s:trim(split(line, s:tab)[0])
+    execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
 function! fzy_settings#buffer_tag() abort
@@ -237,11 +237,13 @@ endfunction
 " FzyOutline
 " ------------------------------------------------------------------
 " columns: tag | filename | linenr | kind | ref
-function! s:outline_format(columns) abort
-    let format = printf('%%%ds', len(string(line('$'))))
-    let linenr = a:columns[2][:len(a:columns[2])-3]
+function! s:outline_format(line) abort
+    let columns = split(a:line, "\t")
+    let format = '%' . len(string(line('$'))) . 's'
+    let linenr = columns[2][:len(columns[2])-3]
     let line = s:trim(getline(linenr))
-    return extend([printf(format, linenr)], [s:codes.reset . substitute(line, a:columns[0], s:codes.blue . a:columns[0] . s:codes.reset, '')])
+    let columns = extend([printf(format, linenr)], [substitute(line, columns[0], s:blue(columns[0]), '')])
+    return join(columns, s:tab)
 endfunction
 
 function! s:outline_source(tag_cmds) abort
@@ -261,14 +263,13 @@ function! s:outline_source(tag_cmds) abort
     elseif empty(lines)
         throw 'No tags found'
     endif
-    return map(map(lines, 's:outline_format(split(v:val, "\t"))'), 'join(v:val, "\t")')
+    return map(lines, 's:outline_format(v:val)')
 endfunction
 
 function! s:outline_sink(path, editcmd, line) abort
-    if !empty(a:line)
-        let linenr = s:trim(split(a:line, "\t")[0])
-        execute printf("%s +%s %s", a:editcmd, linenr, a:path)
-    endif
+    let line = s:clear_escape_sequence(a:line)
+    let linenr = s:trim(split(line, s:tab)[0])
+    execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
 function! fzy_settings#outline() abort
