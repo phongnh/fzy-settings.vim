@@ -351,8 +351,7 @@ function! s:commands_format(line) abort
     " let complete = line[13:22]
     let definition = s:trim(line[25:])
     let result = [
-                \ attr . s:blue(name),
-                \ s:trim(args),
+                \ attr . s:trim(args) . s:nbs . s:blue(name),
                 \ s:trim(definition),
                 \ ]
     return result
@@ -364,8 +363,7 @@ function! s:commands_source() abort
 endfunction
 
 function! s:commands_sink(line) abort
-    let line = s:clear_escape_sequence(a:line)
-    let cmd = matchstr(line[4:], '\zs\S*\ze')
+    let cmd = matchstr(s:clear_escape_sequence(a:line[7:]), '\zs\S*\ze')
     call feedkeys(':' . cmd . (a:line[0] == '!' ? '' : ' '), 'n')
 endfunction
 
