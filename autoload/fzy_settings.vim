@@ -1,9 +1,3 @@
-" https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
-let s:codes = {
-            \ 'normal':  "\x1b[39m",
-            \ 'fg_blue': "\x1b[38;5;4m",
-            \ }
-
 let s:nbs = nr2char(0xa0)
 let s:tab = repeat(s:nbs, 4)
 
@@ -12,18 +6,6 @@ function! s:warn(message) abort
     echomsg a:message
     echohl None
     return 0
-endfunction
-
-function! s:blue(text) abort
-    return printf('%s%s%s', s:codes.fg_blue, a:text, s:codes.normal)
-endfunction
-
-function! s:clear_escape_sequence(text)
-    let text = a:text
-    for l:code in values(s:codes)
-        let text = substitute(text, l:code, '', '')
-    endfor
-    return text
 endfunction
 
 function! s:tryexe(cmd)
@@ -192,9 +174,9 @@ function! s:buffer_tag_format(line) abort
     let format = '%' . len(string(line('$'))) . 's'
     let linenr = columns[2][:len(columns[2])-3]
     if len(columns) > 4
-        return extend([printf(format, linenr)], [s:blue(columns[0]), columns[-2], columns[-1]])
+        return extend([printf(format, linenr)], [columns[0], columns[-2], columns[-1]])
     else
-        return extend([printf(format, linenr)], [s:blue(columns[0]), columns[-1]])
+        return extend([printf(format, linenr)], [columns[0], columns[-1]])
     endif
 endfunction
 
@@ -219,8 +201,7 @@ function! s:buffer_tag_source(tag_cmds) abort
 endfunction
 
 function! s:buffer_tag_sink(path, editcmd, line) abort
-    let line = s:clear_escape_sequence(a:line)
-    let linenr = s:trim(split(line, s:tab)[0])
+    let linenr = s:trim(split(a:line, s:tab)[0])
     execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
@@ -246,10 +227,9 @@ endfunction
 function! s:outline_format(line) abort
     let columns = split(a:line, "\t")
     let format = '%' . len(string(line('$'))) . 's'
-    let linenr = columns[2][:len(columns[2])-3]
+    let linenr = columns[2][0:len(columns[2])-3]
     let line = s:trim(getline(linenr))
-    let columns = extend([printf(format, linenr)], [substitute(line, columns[0], s:blue(columns[0]), '')])
-    return join(columns, s:tab)
+    return join([printf(format, linenr), line], s:tab)
 endfunction
 
 function! s:outline_source(tag_cmds) abort
@@ -273,8 +253,7 @@ function! s:outline_source(tag_cmds) abort
 endfunction
 
 function! s:outline_sink(path, editcmd, line) abort
-    let line = s:clear_escape_sequence(a:line)
-    let linenr = s:trim(split(line, s:tab)[0])
+    let linenr = s:trim(split(a:line, s:tab)[0])
     execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
@@ -394,9 +373,8 @@ nnoremap <Plug>(-fzy-/) /
 nnoremap <Plug>(-fzy-:) :
 
 function! s:history_sink(type, line) abort
-    let line = a:line
     let prefix = "\<Plug>(-fzy-" . a:type . ')'
-    let item = matchstr(line, '\s*[0-9]\+' . s:nbs . '*\zs.*')
+    let item = matchstr(a:line, '\s*[0-9]\+' . s:nbs . '*\zs.*')
     if a:type == ':'
         call histadd(a:type, item)
     endif
@@ -423,9 +401,8 @@ function! fzy_settings#search_history() abort
 endfunction
 
 function! s:history_edit_sink(type, line) abort
-    let line = a:line
     let prefix = "\<Plug>(-fzy-" . a:type . ')'
-    let item = matchstr(line, '\s*[0-9]\+' . s:nbs . '*\zs.*')
+    let item = matchstr(a:line, '\s*[0-9]\+' . s:nbs . '*\zs.*')
     call histadd(a:type, item)
     redraw
     call feedkeys(a:type . "\<Up>", 'n')
