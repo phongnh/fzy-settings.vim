@@ -189,7 +189,11 @@ function! s:buffer_tag_format(line) abort
     let columns = split(a:line, "\t")
     let format = '%' . len(string(line('$'))) . 's'
     let linenr = columns[2][:len(columns[2])-3]
-    return extend([printf(format, linenr)], [s:blue(columns[0]), columns[-2], columns[-1]])
+    if len(columns) > 4
+        return extend([printf(format, linenr)], [s:blue(columns[0]), columns[-2], columns[-1]])
+    else
+        return extend([printf(format, linenr)], [s:blue(columns[0]), columns[-1]])
+    endif
 endfunction
 
 function! s:buffer_tag_source(tag_cmds) abort
