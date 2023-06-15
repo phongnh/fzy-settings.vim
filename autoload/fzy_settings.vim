@@ -4,6 +4,7 @@ let s:codes = {
             \ 'blue':  "\x1b[34m",
             \ }
 
+let s:nbs = nr2char(0xa0)
 let s:tab = repeat(s:nbs, 4)
 
 function! s:warn(message) abort
@@ -11,6 +12,16 @@ function! s:warn(message) abort
     echomsg a:message
     echohl None
     return 0
+endfunction
+
+function! s:blue(text) abort
+    return printf('%s%s%s', "\x1b[38;5;4m", a:text, "\x1b[39m")
+endfunction
+
+function! s:clear_escape_sequence(text)
+    let text = substitute(a:text, "\x1b[38;5;4m", '', '')
+    let text = substitute(text, "\x1b[39m", '', '')
+    return text
 endfunction
 
 function! s:tryexe(cmd)
@@ -319,6 +330,45 @@ function! fzy_settings#location_list() abort
     let title = get(getloclist(0, { 'title': 1 }), 'title', '')
     let title = 'LocationList' . (strlen(title) ? ': ' : '') . title
     call fzy#Start(items, funcref('s:quickfix_sink'), s:opts(title))
+endfunction
+
+" ------------------------------------------------------------------
+" FzyCommands
+" ------------------------------------------------------------------
+function! s:commands_format(line) abort
+    let attr = a:line[0:3]
+    let [name; line] = split(a:line[4:], ' ')
+    let line = s:trim(join(line, ' '))
+    let args = s:trim(line[0:3])
+    " let address = line[5:11]
+    " let complete = line[13:22]
+    let definition = s:trim(line[25:])
+    let result = [
+                \ attr . s:blue(name),
+                \ s:trim(args),
+                \ s:trim(definition),
+                \ ]
+    return result
+endfunction
+
+function! s:commands_source() abort
+    let items = split(call('execute', ['command']), '\n')[1:]
+    return map(s:align_lists(map(items, 's:commands_format(v:val)')), 'join(v:val, " ")')
+endfunction
+
+function! s:commands_sink(line) abort
+    let line = s:clear_escape_sequence(a:line)
+    let cmd = matchstr(line[4:], '\zs\S*\ze')
+    call feedkeys(':' . cmd . (a:line[0] == '!' ? '' : ' '), 'n')
+endfunction
+
+function! fzy_settings#commands() abort
+    let items = s:commands_source()
+    if empty(items)
+        call s:warn('No command items!')
+        return
+    endif
+    call fzy#Start(items, funcref('s:commands_sink'), s:opts('Commands'))
 endfunction
 
 " ------------------------------------------------------------------
