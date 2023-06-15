@@ -4,6 +4,8 @@ let s:codes = {
             \ 'blue':  "\x1b[34m",
             \ }
 
+let s:tab = repeat(s:nbs, 4)
+
 function! s:warn(message) abort
     echohl WarningMsg
     echomsg a:message
@@ -149,15 +151,14 @@ endfunction
 " ------------------------------------------------------------------
 function! s:buffer_lines_sink(line) abort
   normal! m'
-  execute split(a:line, '\t')[0]
+  execute split(a:line, s:tab)[0]
   normal! ^zvzz
 endfunction
 
 function! s:buffer_lines_source() abort
-    let linefmt = " %4d " . "\t%s"
-    let fmtexpr = 'printf(linefmt, v:key + 1, s:codes.reset . v:val)'
-    let lines = getline(1, '$')
-    return map(lines, fmtexpr)
+    let linefmt = '%' . len(string(line('$'))) . 'd'
+    let format = linefmt . s:tab . '%s'
+    return map(getline(1, '$'), 'printf(format, v:key + 1, v:val)')
 endfunction
 
 function! fzy_settings#buffer_lines() abort
