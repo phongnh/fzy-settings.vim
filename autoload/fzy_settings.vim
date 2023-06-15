@@ -379,6 +379,79 @@ function! fzy_settings#commands() abort
 endfunction
 
 " ------------------------------------------------------------------
+" FzyCommandHistory
+" FzySearchHistory
+" FzyCommandHistoryEdit
+" FzySearchHistoryEdit
+" ------------------------------------------------------------------
+function! s:history_source(type) abort
+    let max = histnr(a:type)
+    let fmt = '%' . len(string(max)) . 'd'
+    let list = filter(map(range(1, max), 'histget(a:type, -v:val)'), '!empty(v:val)')
+    return map(list, 'printf(fmt, v:key) . s:nbs . s:blue(v:val)')
+endfunction
+
+nnoremap <Plug>(-fzy-vim-do) :execute g:__fzy_command<CR>
+nnoremap <Plug>(-fzy-/) /
+nnoremap <Plug>(-fzy-:) :
+
+function! s:history_sink(type, line) abort
+    let line = s:clear_escape_sequence(a:line)
+    let prefix = "\<Plug>(-fzy-" . a:type . ')'
+    let item = matchstr(line, '\s*[0-9]\+' . s:nbs . '*\zs.*')
+    if a:type == ':'
+        call histadd(a:type, item)
+    endif
+    let g:__fzy_command = 'normal ' . prefix . item . "\<CR>"
+    call feedkeys("\<Plug>(-fzy-vim-do)")
+endfunction
+
+function! fzy_settings#command_history() abort
+    let items = s:history_source(':')
+    if empty(items)
+        call s:warn('No command history items!')
+        return
+    endif
+    call fzy#Start(items, funcref('s:history_sink', [':']), s:opts('CommandHistory'))
+endfunction
+
+function! fzy_settings#search_history() abort
+    let items = s:history_source('/')
+    if empty(items)
+        call s:warn('No search history items!')
+        return
+    endif
+    call fzy#Start(items, funcref('s:history_sink', ['/']), s:opts('SearchHistory'))
+endfunction
+
+function! s:history_edit_sink(type, line) abort
+    let line = s:clear_escape_sequence(a:line)
+    let prefix = "\<Plug>(-fzy-" . a:type . ')'
+    let item = matchstr(line, '\s*[0-9]\+' . s:nbs . '*\zs.*')
+    call histadd(a:type, item)
+    redraw
+    call feedkeys(a:type . "\<Up>", 'n')
+endfunction
+
+function! fzy_settings#command_history_edit() abort
+    let items = s:history_source(':')
+    if empty(items)
+        call s:warn('No command history items!')
+        return
+    endif
+    call fzy#Start(items, funcref('s:history_edit_sink', [':']), s:opts('CommandHistoryEdit'))
+endfunction
+
+function! fzy_settings#search_history_edit() abort
+    let items = s:history_source('/')
+    if empty(items)
+        call s:warn('No search history items!')
+        return
+    endif
+    call fzy#Start(items, funcref('s:history_edit_sink', ['/']), s:opts('SearchHistoryEdit'))
+endfunction
+
+" ------------------------------------------------------------------
 " FzyRegisters
 " ------------------------------------------------------------------
 function! s:registers_sink(line) abort
