@@ -135,7 +135,7 @@ endfunction
 
 function! s:update_popup_settings()
     let l:popupwin = g:fzy_popup && winwidth(0) >= 120 ? v:true : v:false
-    let l:lines = l:popupwin ? (&lines >= 30 ? &lines / 2 : 15) : 10
+    let l:lines = l:popupwin ? (&lines >= 20 ? float2nr(&lines * 0.85 / 2) + 3 : min([&lines - 3, 12])) : 10
     call extend(g:fzy, {
                 \ 'lines': l:lines,
                 \ 'popupwin': l:popupwin,
