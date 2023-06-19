@@ -19,6 +19,10 @@ let g:fzy = {
             \ },
             \ }
 
+if exists('g:fzy_exe') && !empty(g:fzy_exe)
+    let g:fzy.exe = g:fzy_exe
+endif
+
 if get(g:, 'fzy_popup_borderchars', 'default') ==# 'round'
     let g:fzy.popup.borderchars = ['─', '│', '─', '│', '╭', '╮', '╯', '╰']
 endif
