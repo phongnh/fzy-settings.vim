@@ -17,6 +17,7 @@ let g:fzy = {
             \   'borderhighlight': ['GreyDark'],
             \   'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
             \ },
+            \ 'disable_cmd_history': v:true,
             \ }
 
 if exists('g:fzy_exe') && !empty(g:fzy_exe)
