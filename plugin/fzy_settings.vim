@@ -20,7 +20,7 @@ let g:fzy = {
             \ 'disable_cmd_history': v:true,
             \ }
 
-if exists('g:fzy_exe') && !empty(g:fzy_exe)
+if exists('g:fzy_exe') && executable(g:fzy_exe)
     let g:fzy.exe = g:fzy_exe
 endif
 
