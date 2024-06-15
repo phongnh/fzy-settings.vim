@@ -28,8 +28,10 @@ if get(g:, 'fzy_popup_borderchars', 'default') ==# 'round'
     let g:fzy.popup.borderchars = ['─', '│', '─', '│', '╭', '╮', '╯', '╰']
 endif
 
-let g:fzy_find_tool    = get(g:, 'fzy_find_tool', 'fd')
-let g:fzy_follow_links = get(g:, 'fzy_follow_links', 0)
+let g:fzy_find_tool          = get(g:, 'fzy_find_tool', 'fd')
+let g:fzy_find_no_ignore_vcs = get(g:, 'fzy_find_no_ignore_vcs', 0)
+let g:fzy_follow_links       = get(g:, 'fzy_follow_links', 1)
+let g:fzy_grep_no_ignore_vcs = get(g:, 'fzy_grep_no_ignore_vcs', 0)
 
 " Check if Popup/Floating Win is available
 if (has('nvim') && exists('*nvim_open_win') && has('nvim-0.4.2')) ||
