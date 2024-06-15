@@ -28,11 +28,6 @@ if get(g:, 'fzy_popup_borderchars', 'default') ==# 'round'
     let g:fzy.popup.borderchars = ['─', '│', '─', '│', '╭', '╮', '╯', '╰']
 endif
 
-let g:fzy_find_tool          = get(g:, 'fzy_find_tool', 'fd')
-let g:fzy_find_no_ignore_vcs = get(g:, 'fzy_find_no_ignore_vcs', 0)
-let g:fzy_follow_links       = get(g:, 'fzy_follow_links', 1)
-let g:fzy_grep_no_ignore_vcs = get(g:, 'fzy_grep_no_ignore_vcs', 0)
-
 " Check if Popup/Floating Win is available
 if (has('nvim') && exists('*nvim_open_win') && has('nvim-0.4.2')) ||
             \ (exists('*popup_create') && has('patch-8.2.191'))
@@ -41,21 +36,18 @@ else
     let g:fzy_popup = v:false
 endif
 
-let g:fzy_ctags        = get(g:, 'fzy_ctags', 'ctags')
+let g:fzy_find_tool          = get(g:, 'fzy_find_tool', 'fd')
+let g:fzy_find_no_ignore_vcs = get(g:, 'fzy_find_no_ignore_vcs', 0)
+let g:fzy_follow_links       = get(g:, 'fzy_follow_links', 1)
+let g:fzy_grep_no_ignore_vcs = get(g:, 'fzy_grep_no_ignore_vcs', 0)
+
+let g:fzy_ctags_bin    = get(g:, 'fzy_ctags_bin', 'ctags')
 let g:fzy_ctags_ignore = get(g:, 'fzy_ctags_ignore', expand('~/.ctagsignore'))
 
-function! s:is_universal_ctags(ctags_path) abort
-    try
-        return system(printf('%s --version', a:ctags_path)) =~# 'Universal Ctags'
-    catch
-        return 0
-    endtry
-endfunction
-
-if get(g:, 'fzy_universal_ctags', s:is_universal_ctags(g:fzy_ctags)) && filereadable(g:fzy_ctags_ignore)
-    let g:fzy_tags_command = printf('%s --exclude=@%s -R', g:fzy_ctags, g:fzy_ctags_ignore)
+if get(g:, 'fzy_universal_ctags', fzy_settings#IsUniversalCtags(g:fzy_ctags_bin)) && filereadable(g:fzy_ctags_ignore)
+    let g:fzy_tags_command = printf('%s --exclude=@%s -R', g:fzy_ctags_bin, g:fzy_ctags_ignore)
 else
-    let g:fzy_tags_command = printf('%s -R', g:fzy_ctags)
+    let g:fzy_tags_command = printf('%s -R', g:fzy_ctags_bin)
 endif
 
 function! s:build_find_command() abort
@@ -64,16 +56,15 @@ function! s:build_find_command() abort
                 \ 'rg': 'rg --files --color never --no-ignore-vcs --ignore-dot --ignore-parent --hidden',
                 \ }
 
-    if g:fzy_follow_links
-        call map(find_commands, 'v:val . " --follow"')
-    endif
-
     if g:fzy_find_tool ==# 'rg' && executable('rg')
         let g:fzy_find_command = find_commands['rg']
     else
         let g:fzy_find_tool = 'fd'
         let g:fzy_find_command = find_commands['fd']
     endif
+
+    let g:fzy_find_command .= (g:fzy_follow_links ? ' --follow' : '')
+    let g:fzy_find_command .= (g:fzy_find_no_ignore_vcs ? ' --no-ignore-vcs' : '')
 
     call extend(g:fzy, { 'findcmd': g:fzy_find_command })
 endfunction

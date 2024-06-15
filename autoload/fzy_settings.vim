@@ -43,6 +43,10 @@ else
     endfunction
 endif
 
+function! fzy_settings#IsUniversalCtags(ctags_bin) abort
+    return system(a:ctags_bin . ' --version') =~# 'Universal Ctags'
+endfunction
+
 function! s:opts(title, space = 0) abort
     let opts = get(g:, 'fzy', {})->copy()->extend({ 'statusline': a:title })
     call get(opts, 'popup', {})->extend({ 'title': a:space ? ' ' .. a:title : a:title })
