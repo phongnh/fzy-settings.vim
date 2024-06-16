@@ -11,7 +11,7 @@ function! s:registers_source() abort
     return items
 endfunction
 
-function! fzy_settings#registers() abort
+function! fzy_settings#registers#run() abort
     let items = s:registers_source()
     if empty(items)
         return fzy_settings#Warn('No register items!')
