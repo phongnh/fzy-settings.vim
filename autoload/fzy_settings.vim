@@ -216,31 +216,6 @@ function! fzy_settings#search_history_edit() abort
 endfunction
 
 " ------------------------------------------------------------------
-" FzyRegisters
-" ------------------------------------------------------------------
-function! s:registers_sink(line) abort
-    call setreg('"', getreg(a:line[4]))
-    echohl ModeMsg
-    echo 'Yanked!'
-    echohl None
-endfunction
-
-function! s:registers_source() abort
-    let items = split(call('execute', ['registers']), '\n')[1:]
-    call map(items, 'fzy_settings#Trim(v:val)')
-    return items
-endfunction
-
-function! fzy_settings#registers() abort
-    let items = s:registers_source()
-    if empty(items)
-        call fzy_settings#Warn('No register items!')
-        return
-    endif
-    call fzy#Start(items, funcref('s:registers_sink'), s:opts('Registers'))
-endfunction
-
-" ------------------------------------------------------------------
 " FzyMessages
 " ------------------------------------------------------------------
 function! s:messages_sink(e) abort
