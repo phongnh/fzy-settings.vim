@@ -59,18 +59,6 @@ function! s:opts(title, space = 0) abort
     return opts
 endfunction
 
-function! fzy_settings#uniq(list)
-    let visited = {}
-    let ret = []
-    for l in a:list
-        if !empty(l) && !has_key(visited, l)
-            call add(ret, l)
-            let visited[l] = 1
-        endif
-    endfor
-    return ret
-endfunction
-
 " ------------------------------------------------------------------
 " FzyFindAll
 " ------------------------------------------------------------------

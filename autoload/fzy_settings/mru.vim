@@ -17,8 +17,20 @@ function! s:buflisted() abort
     return filter(range(1, bufnr('$')), 'buflisted(v:val) && getbufvar(v:val, "&filetype") != "qf"')
 endfunction
 
+function! s:uniq(list) abort
+    let visited = {}
+    let ret = []
+    for l in a:list
+        if !empty(l) && !has_key(visited, l)
+            call add(ret, l)
+            let visited[l] = 1
+        endif
+    endfor
+    return ret
+endfunction
+
 function! s:vim_recent_files() abort
-    let recent_files = fzy_settings#uniq(
+    let recent_files = s:uniq(
                 \ map(
                 \   filter([expand('%')], 'len(v:val)')
                 \   + filter(map(s:buflisted(), 'bufname(v:val)'), 'len(v:val)')
