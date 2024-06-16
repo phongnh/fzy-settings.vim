@@ -114,7 +114,7 @@ command! ToggleFzyFollowLinks call <SID>ToggleFzyFollowLinks()
 
 command! FzyMru                call fzy_settings#mru#run()
 command! FzyMruInCwd           call fzy_settings#mru#run_in_cwd()
-command! FzyBufferLines        call fzy_settings#buffer_lines()
+command! FzyBufferLines        call fzy_settings#buffer_lines#run()
 command! FzyBufferTag          call fzy_settings#buffer_tag#run()
 command! FzyOutline            call fzy_settings#outline#run()
 command! FzyQuickfix           call fzy_settings#quickfix#run()
