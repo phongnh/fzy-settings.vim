@@ -16,5 +16,5 @@ function! fzy_settings#registers#run() abort
     if empty(items)
         return fzy_settings#Warn('No register items!')
     endif
-    call fzy#Start(items, funcref('s:registers_sink'), fzy_settings#FzyOpts(' Registers '))
+    call fzy#Start(items, funcref('s:registers_sink'), fzy_settings#FzyOpts('Registers'))
 endfunction

@@ -15,5 +15,5 @@ function! fzy_settings#blines#run() abort
     if empty(items)
         return fzy_settings#Warn('No lines!')
     endif
-    call fzy#Start(items, funcref('s:blines_sink'), fzy_settings#FzyOpts(' BufLines: ' . expand('%') . ' '))
+    call fzy#Start(items, funcref('s:blines_sink'), fzy_settings#FzyOpts('BufLines: ' . expand('%')))
 endfunction

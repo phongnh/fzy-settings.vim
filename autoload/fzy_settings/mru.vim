@@ -61,7 +61,7 @@ function! fzy_settings#mru#run() abort
     if empty(items)
         return fzy_settings#Warn('No MRU items!')
     endif
-    call fzy#Start(items, funcref('s:mru_sink', ['edit']), fzy_settings#FzyOpts(' MRU '))
+    call fzy#Start(items, funcref('s:mru_sink', ['edit']), fzy_settings#FzyOpts('MRU'))
 endfunction
 
 function! fzy_settings#mru#run_in_cwd() abort
@@ -69,5 +69,5 @@ function! fzy_settings#mru#run_in_cwd() abort
     if empty(items)
         return fzy_settings#Warn('No MRU items!')
     endif
-    call fzy#Start(items, funcref('s:mru_sink', ['edit']), fzy_settings#FzyOpts(printf(' MRU [directory: %s] ', getcwd())))
+    call fzy#Start(items, funcref('s:mru_sink', ['edit']), fzy_settings#FzyOpts(printf('MRU [directory: %s]', getcwd())))
 endfunction

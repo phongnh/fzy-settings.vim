@@ -21,7 +21,7 @@ function! fzy_settings#quickfix#run() abort
         return fzy_settings#Warn('No quickfix items!')
     endif
     let title = get(getqflist({ 'title': 1 }), 'title', '')
-    let title = ' Quickfix' . (strlen(title) ? ': ' : '') . title . ' '
+    let title = 'Quickfix' . (strlen(title) ? ': ' : '') . title
     call fzy#Start(items, funcref('s:quickfix_sink'), fzy_settings#FzyOpts(title))
 endfunction
 
@@ -35,6 +35,6 @@ function! fzy_settings#quickfix#loclist() abort
         return fzy_settings#Warn('No location list items!')
     endif
     let title = get(getloclist(0, { 'title': 1 }), 'title', '')
-    let title = ' LocationList' . (strlen(title) ? ': ' : '') . title . ' '
+    let title = 'LocationList' . (strlen(title) ? ': ' : '') . title
     call fzy#Start(items, funcref('s:quickfix_sink'), fzy_settings#FzyOpts(title))
 endfunction

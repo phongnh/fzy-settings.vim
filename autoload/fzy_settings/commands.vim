@@ -28,5 +28,5 @@ function! fzy_settings#commands() abort
     if empty(items)
         return fzy_settings#Warn('No command items!')
     endif
-    call fzy#Start(items, funcref('s:commands_sink'), fzy_settings#FzyOpts(' Commands '))
+    call fzy#Start(items, funcref('s:commands_sink'), fzy_settings#FzyOpts('Commands'))
 endfunction

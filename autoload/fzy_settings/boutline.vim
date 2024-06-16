@@ -49,7 +49,7 @@ endfunction
 function! fzy_settings#boutline#run() abort
     try
         let tag_cmds = s:boutline_tag_commands()
-        call fzy#Start(s:boutline_source(tag_cmds), funcref('s:boutline_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts(' boutline: ' . expand('%') . ' '))
+        call fzy#Start(s:boutline_source(tag_cmds), funcref('s:boutline_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts('BOutline: ' . expand('%')))
     catch
         call fzy_settings#Warn(v:exception)
     endtry

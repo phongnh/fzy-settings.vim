@@ -14,5 +14,5 @@ function! fzy_settings#messages#run() abort
     if empty(items)
         return fzy_settings#Warn('No message items!')
     endif
-    call fzy#Start(items, funcref('s:messages_sink'), fzy_settings#FzyOpts(' Messages '))
+    call fzy#Start(items, funcref('s:messages_sink'), fzy_settings#FzyOpts('Messages'))
 endfunction

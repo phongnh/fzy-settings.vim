@@ -45,7 +45,7 @@ function! fzy_settings#IsUniversalCtags(ctags_bin) abort
 endfunction
 
 function! fzy_settings#FzyOpts(title) abort
-    let opts = get(g:, 'fzy', {})->copy()->extend({ 'statusline': a:title })
+    let opts = get(g:, 'fzy', {})->deepcopy()->extend({ 'statusline': a:title })
     call get(opts, 'popup', {})->extend({ 'title': a:title })
     return opts
 endfunction

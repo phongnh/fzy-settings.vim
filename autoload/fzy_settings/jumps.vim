@@ -28,5 +28,5 @@ function! fzy_settings#jumps#run() abort
     if len(items) < 2
         return fzy_settings#Warn('No jump items!')
     endif
-    call fzy#Start(items, funcref('s:jumps_sink'), fzy_settings#FzyOpts(' Jumps '))
+    call fzy#Start(items, funcref('s:jumps_sink'), fzy_settings#FzyOpts('Jumps'))
 endfunction

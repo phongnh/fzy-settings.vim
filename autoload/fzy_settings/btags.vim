@@ -53,7 +53,7 @@ endfunction
 function! fzy_settings#btags#run() abort
     try
         let tag_cmds = s:btags_commands()
-        call fzy#Start(s:btags_source(tag_cmds), funcref('s:btags_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts(' BufTag: ' . expand('%') . ' '))
+        call fzy#Start(s:btags_source(tag_cmds), funcref('s:btags_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts('BufTags: ' . expand('%')))
     catch
         call fzy_settings#Warn(v:exception)
     endtry
