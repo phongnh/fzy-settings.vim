@@ -7,6 +7,11 @@ if get(g:, 'loaded_fzy_settings_vim', 0)
     finish
 endif
 
+let g:fzy_symbols = {
+            \ 'nbs': nr2char(0xa0),
+            \ 'tab': repeat(nr2char(0xa0), 4),
+            \ }
+
 let g:fzy = {
             \ 'prompt': '> ',
             \ 'showinfo': v:true,
@@ -110,8 +115,8 @@ command! ToggleFzyFollowLinks call <SID>ToggleFzyFollowLinks()
 command! FzyMru                call fzy_settings#mru#run()
 command! FzyMruInCwd           call fzy_settings#mru#run_in_cwd()
 command! FzyBufferLines        call fzy_settings#buffer_lines()
-command! FzyBufferTag          call fzy_settings#buffer_tag()
-command! FzyOutline            call fzy_settings#outline()
+command! FzyBufferTag          call fzy_settings#buffer_tag#run()
+command! FzyOutline            call fzy_settings#outline#run()
 command! FzyQuickfix           call fzy_settings#quickfix()
 command! FzyLocationList       call fzy_settings#location_list()
 command! FzyCommands           call fzy_settings#commands()
