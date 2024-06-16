@@ -7,7 +7,7 @@ function! s:commands_format(line) abort
     " let complete = line[13:22]
     let definition = fzy_settings#Trim(line[25:])
     let result = [
-                \ attr . fzy_settings#Trim(args) . s:nbs . name,
+                \ attr . fzy_settings#Trim(args) . g:fzy_symbols.nbs . name,
                 \ fzy_settings#Trim(definition),
                 \ ]
     return result
