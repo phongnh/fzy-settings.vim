@@ -1,6 +1,16 @@
 let s:nbs = nr2char(0xa0)
 let s:tab = repeat(s:nbs, 4)
 
+function! fzy_settings#Trim(str) abort
+    return substitute(a:str, '^\s*\(.\{-}\)\s*$', '\1', '')
+endfunction
+
+if exists('*trim')
+    function! fzy_settings#Trim(str) abort
+        return trim(a:str)
+    endfunction
+endif
+
 function! s:warn(message) abort
     echohl WarningMsg
     echomsg a:message
@@ -32,16 +42,6 @@ function! s:align_lists(lists)
     endfor
     return a:lists
 endfunction
-
-if exists('*trim')
-    function! s:trim(str) abort
-        return trim(a:str)
-    endfunction
-else
-    function! s:trim(str) abort
-        return substitute(a:str, '^\s*\(.\{-}\)\s*$', '\1', '')
-    endfunction
-endif
 
 function! fzy_settings#IsUniversalCtags(ctags_bin) abort
     return system(a:ctags_bin . ' --version') =~# 'Universal Ctags'
@@ -205,7 +205,7 @@ function! s:buffer_tag_source(tag_cmds) abort
 endfunction
 
 function! s:buffer_tag_sink(path, editcmd, line) abort
-    let linenr = s:trim(split(a:line, s:tab)[0])
+    let linenr = fzy_settings#Trim(split(a:line, s:tab)[0])
     execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
@@ -232,7 +232,7 @@ function! s:outline_format(line) abort
     let columns = split(a:line, "\t")
     let format = '%' . len(string(line('$'))) . 's'
     let linenr = columns[2][0:len(columns[2])-3]
-    let line = s:trim(getline(linenr))
+    let line = fzy_settings#Trim(getline(linenr))
     return join([printf(format, linenr), line], s:tab)
 endfunction
 
@@ -257,7 +257,7 @@ function! s:outline_source(tag_cmds) abort
 endfunction
 
 function! s:outline_sink(path, editcmd, line) abort
-    let linenr = s:trim(split(a:line, s:tab)[0])
+    let linenr = fzy_settings#Trim(split(a:line, s:tab)[0])
     execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
@@ -328,14 +328,14 @@ endfunction
 function! s:commands_format(line) abort
     let attr = a:line[0:3]
     let [name; line] = split(a:line[4:], ' ')
-    let line = s:trim(join(line, ' '))
-    let args = s:trim(line[0:3])
+    let line = fzy_settings#Trim(join(line, ' '))
+    let args = fzy_settings#Trim(line[0:3])
     " let address = line[5:11]
     " let complete = line[13:22]
-    let definition = s:trim(line[25:])
+    let definition = fzy_settings#Trim(line[25:])
     let result = [
-                \ attr . s:trim(args) . s:nbs . name,
-                \ s:trim(definition),
+                \ attr . fzy_settings#Trim(args) . s:nbs . name,
+                \ fzy_settings#Trim(definition),
                 \ ]
     return result
 endfunction
@@ -442,7 +442,7 @@ endfunction
 
 function! s:registers_source() abort
     let items = split(call('execute', ['registers']), '\n')[1:]
-    call map(items, 's:trim(v:val)')
+    call map(items, 'fzy_settings#Trim(v:val)')
     return items
 endfunction
 
