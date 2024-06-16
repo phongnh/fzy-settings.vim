@@ -29,7 +29,7 @@ if exists('g:fzy_exe') && executable(g:fzy_exe)
     let g:fzy.exe = g:fzy_exe
 endif
 
-if get(g:, 'fzy_popup_borderchars', 'default') ==# 'round'
+if get(g:, 'fzy_popup', 'default') ==# 'round'
     let g:fzy.popup.borderchars = ['─', '│', '─', '│', '╭', '╮', '╯', '╰']
 endif
 
@@ -96,38 +96,6 @@ function! s:BuildGrepCommand() abort
     call extend(g:fzy, { 'grepcmd': g:fzy_grep_command, 'grepformat': '%f:%l:%m' })
 endfunction
 
-function! s:ToggleFzyFollowLinks() abort
-    if g:fzy_follow_links == 0
-        let g:fzy_follow_links = 1
-        echo 'Fzy follows symlinks!'
-    else
-        let g:fzy_follow_links = 0
-        echo 'Fzy does not follow symlinks!'
-    endif
-    call s:BuildFindCommand()
-    call s:BuildGrepCommand()
-endfunction
-
-command! -nargs=? -complete=dir FzyFindAll call fzy_settings#find_all(<q-args>)
-
-command! ToggleFzyFollowLinks call <SID>ToggleFzyFollowLinks()
-
-command! FzyMru                call fzy_settings#mru#run()
-command! FzyMruInCwd           call fzy_settings#mru#run_in_cwd()
-command! FzyBufferLines        call fzy_settings#buffer_lines#run()
-command! FzyBufferTag          call fzy_settings#buffer_tag#run()
-command! FzyOutline            call fzy_settings#outline#run()
-command! FzyQuickfix           call fzy_settings#quickfix#run()
-command! FzyLocationList       call fzy_settings#quickfix#loclist()
-command! FzyCommands           call fzy_settings#commands#run()
-command! FzyCommandHistory     call fzy_settings#history#command()
-command! FzySearchHistory      call fzy_settings#history#search()
-command! FzyCommandHistoryEdit call fzy_settings#history#command_edit()
-command! FzySearchHistoryEdit  call fzy_settings#history#search_edit()
-command! FzyRegisters          call fzy_settings#registers#run()
-command! FzyMessages           call fzy_settings#messages#run()
-command! FzyJumps              call fzy_settings#jumps#run()
-
 function! s:SetupFzySettings() abort
     call s:BuildFindAllCommand()
     call s:BuildFindCommand()
@@ -149,5 +117,37 @@ augroup FzySettings
     autocmd VimEnter * call <SID>SetupFzySettings()
     autocmd VimResized * call <SID>UpdatePopupSettings()
 augroup END
+
+function! s:ToggleFzyFollowLinks() abort
+    if g:fzy_follow_links == 0
+        let g:fzy_follow_links = 1
+        echo 'Fzy follows symlinks!'
+    else
+        let g:fzy_follow_links = 0
+        echo 'Fzy does not follow symlinks!'
+    endif
+    call s:BuildFindCommand()
+    call s:BuildGrepCommand()
+endfunction
+
+command! ToggleFzyFollowLinks call <SID>ToggleFzyFollowLinks()
+
+command! -nargs=? -complete=dir FzyFindAll call fzy_settings#files#all(<q-args>)
+
+command! FzyMru                call fzy_settings#mru#run()
+command! FzyMruInCwd           call fzy_settings#mru#run_in_cwd()
+command! FzyBufferLines        call fzy_settings#buffer_lines#run()
+command! FzyBufferTag          call fzy_settings#buffer_tag#run()
+command! FzyOutline            call fzy_settings#outline#run()
+command! FzyQuickfix           call fzy_settings#quickfix#run()
+command! FzyLocationList       call fzy_settings#quickfix#loclist()
+command! FzyCommands           call fzy_settings#commands#run()
+command! FzyCommandHistory     call fzy_settings#history#command()
+command! FzySearchHistory      call fzy_settings#history#search()
+command! FzyCommandHistoryEdit call fzy_settings#history#command_edit()
+command! FzySearchHistoryEdit  call fzy_settings#history#search_edit()
+command! FzyRegisters          call fzy_settings#registers#run()
+command! FzyMessages           call fzy_settings#messages#run()
+command! FzyJumps              call fzy_settings#jumps#run()
 
 let g:loaded_fzy_settings_vim = 1

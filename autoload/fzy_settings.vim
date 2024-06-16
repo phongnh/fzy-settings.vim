@@ -49,15 +49,3 @@ function! fzy_settings#FzyOpts(title) abort
     call get(opts, 'popup', {})->extend({ 'title': a:title })
     return opts
 endfunction
-
-" ------------------------------------------------------------------
-" FzyFindAll
-" ------------------------------------------------------------------
-function! fzy_settings#find_all(dir) abort
-    try
-        let g:fzy.findcmd = g:fzy_find_all_command
-        execute 'FzyFind ' a:dir
-    finally
-        let g:fzy.findcmd = g:fzy_find_command
-    endtry
-endfunction
