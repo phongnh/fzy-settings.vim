@@ -1,5 +1,5 @@
 " columns: tag | filename | linenr | kind | ref
-function! s:buffer_tag_format(line) abort
+function! s:btags_format(line) abort
     let columns = split(a:line, "\t")
     let format = '%' . len(string(line('$'))) . 's'
     let linenr = columns[2][:len(columns[2])-3]
@@ -10,7 +10,7 @@ function! s:buffer_tag_format(line) abort
     endif
 endfunction
 
-function! s:buffer_tag_source(tag_cmds) abort
+function! s:btags_source(tag_cmds) abort
     if !filereadable(expand('%'))
         throw 'Save the file first'
     endif
@@ -30,15 +30,15 @@ function! s:buffer_tag_source(tag_cmds) abort
         throw 'No tags found'
     endif
 
-    return map(fzy_settings#AlignLists(map(lines, 's:buffer_tag_format(v:val)')), 'join(v:val, g:fzy_symbols.tab)')
+    return map(fzy_settings#AlignLists(map(lines, 's:btags_format(v:val)')), 'join(v:val, g:fzy_symbols.tab)')
 endfunction
 
-function! s:buffer_tag_sink(path, editcmd, line) abort
+function! s:btags_sink(path, editcmd, line) abort
     let linenr = fzy_settings#Trim(split(a:line, g:fzy_symbols.tab)[0])
     execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
-function! s:buffer_tag_commands() abort
+function! s:btags_commands() abort
     let language = get({ 'cpp': 'c++' }, &filetype, &filetype)
     let filename = expand('%:S')
     let null = has('win32') || has('win64') ? 'nul' : '/dev/null'
@@ -50,10 +50,10 @@ function! s:buffer_tag_commands() abort
                 \ ]
 endfunction
 
-function! fzy_settings#buffer_tag#run() abort
+function! fzy_settings#btags#run() abort
     try
-        let tag_cmds = s:buffer_tag_commands()
-        call fzy#Start(s:buffer_tag_source(tag_cmds), funcref('s:buffer_tag_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts(' BufTag: ' . expand('%') . ' '))
+        let tag_cmds = s:btags_commands()
+        call fzy#Start(s:btags_source(tag_cmds), funcref('s:btags_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts(' BufTag: ' . expand('%') . ' '))
     catch
         call fzy_settings#Warn(v:exception)
     endtry

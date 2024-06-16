@@ -1,5 +1,5 @@
 " columns: tag | filename | linenr | kind | ref
-function! s:outline_format(line) abort
+function! s:boutline_format(line) abort
     let columns = split(a:line, "\t")
     let format = '%' . len(string(line('$'))) . 's'
     let linenr = columns[2][:len(columns[2])-3]
@@ -7,7 +7,7 @@ function! s:outline_format(line) abort
     return join([printf(format, linenr), line], g:fzy_symbols.tab)
 endfunction
 
-function! s:outline_source(tag_cmds) abort
+function! s:boutline_source(tag_cmds) abort
     if !filereadable(expand('%'))
         throw 'Save the file first'
     endif
@@ -27,15 +27,15 @@ function! s:outline_source(tag_cmds) abort
         throw 'No tags found'
     endif
 
-    return map(lines, 's:outline_format(v:val)')
+    return map(lines, 's:boutline_format(v:val)')
 endfunction
 
-function! s:outline_sink(path, editcmd, line) abort
+function! s:boutline_sink(path, editcmd, line) abort
     let linenr = fzy_settings#Trim(split(a:line, g:fzy_symbols.tab)[0])
     execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
-function! s:outline_tag_commands() abort
+function! s:boutline_tag_commands() abort
     let language = get({ 'cpp': 'c++' }, &filetype, &filetype)
     let filename = expand('%:S')
     let null = has('win32') || has('win64') ? 'nul' : '/dev/null'
@@ -46,10 +46,10 @@ function! s:outline_tag_commands() abort
                 \ ]
 endfunction
 
-function! fzy_settings#outline#run() abort
+function! fzy_settings#boutline#run() abort
     try
-        let tag_cmds = s:outline_tag_commands()
-        call fzy#Start(s:outline_source(tag_cmds), funcref('s:outline_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts(' Outline: ' . expand('%') . ' '))
+        let tag_cmds = s:boutline_tag_commands()
+        call fzy#Start(s:boutline_source(tag_cmds), funcref('s:boutline_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts(' boutline: ' . expand('%') . ' '))
     catch
         call fzy_settings#Warn(v:exception)
     endtry
