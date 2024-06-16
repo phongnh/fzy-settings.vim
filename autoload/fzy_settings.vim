@@ -11,14 +11,14 @@ if exists('*trim')
     endfunction
 endif
 
-function! s:warn(message) abort
+function! fzy_settings#Warn(message) abort
     echohl WarningMsg
     echomsg a:message
     echohl None
     return 0
 endfunction
 
-function! s:tryexe(cmd)
+function! fzy_settings#TryExe(cmd) abort
     try
         execute a:cmd
     catch
@@ -28,7 +28,7 @@ function! s:tryexe(cmd)
     endtry
 endfunction
 
-function! s:align_lists(lists)
+function! fzy_settings#AlignLists(lists) abort
     let maxes = {}
     for list in a:lists
         let i = 0
@@ -124,13 +124,13 @@ endfunction
 
 function! s:mru_sink(editcmd, choice) abort
     let fname = fnameescape(a:choice)
-    call s:tryexe(printf('%s %s', a:editcmd, fname))
+    call fzy_settings#TryExe(printf('%s %s', a:editcmd, fname))
 endfunction
 
 function! fzy_settings#mru() abort
     let items = s:vim_recent_files()
     if empty(items)
-        call s:warn('No MRU items!')
+        call fzy_settings#Warn('No MRU items!')
         return
     endif
     call fzy#Start(items, funcref('s:mru_sink', ['edit']), s:opts('MRU'))
@@ -139,7 +139,7 @@ endfunction
 function! fzy_settings#mru_in_cwd() abort
     let items = s:vim_recent_files_in_cwd()
     if empty(items)
-        call s:warn('No MRU items!')
+        call fzy_settings#Warn('No MRU items!')
         return
     endif
     call fzy#Start(items, funcref('s:mru_sink', ['edit']), s:opts(printf('MRU [directory: %s]', getcwd())))
@@ -163,7 +163,7 @@ endfunction
 function! fzy_settings#buffer_lines() abort
     let items = s:buffer_lines_source()
     if empty(items)
-        call s:warn('No lines!')
+        call fzy_settings#Warn('No lines!')
         return
     endif
     call fzy#Start(items, funcref('s:buffer_lines_sink'), s:opts('BufLines: ' . expand('%')))
@@ -201,7 +201,7 @@ function! s:buffer_tag_source(tag_cmds) abort
     elseif empty(lines)
         throw 'No tags found'
     endif
-    return map(s:align_lists(map(lines, 's:buffer_tag_format(v:val)')), 'join(v:val, s:tab)')
+    return map(fzy_settings#AlignLists(map(lines, 's:buffer_tag_format(v:val)')), 'join(v:val, s:tab)')
 endfunction
 
 function! s:buffer_tag_sink(path, editcmd, line) abort
@@ -220,7 +220,7 @@ function! fzy_settings#buffer_tag() abort
                     \ ]
         call fzy#Start(s:buffer_tag_source(tag_cmds), funcref('s:buffer_tag_sink', [expand('%:p'), 'edit']), s:opts('BufTag: ' . expand('%')))
     catch
-        call s:warn(v:exception)
+        call fzy_settings#Warn(v:exception)
     endtry
 endfunction
 
@@ -271,7 +271,7 @@ function! fzy_settings#outline() abort
                     \ ]
         call fzy#Start(s:outline_source(tag_cmds), funcref('s:outline_sink', [expand('%:p'), 'edit']), s:opts('Outline: ' . expand('%')))
     catch
-        call s:warn(v:exception)
+        call fzy_settings#Warn(v:exception)
     endtry
 endfunction
 
@@ -299,7 +299,7 @@ endfunction
 function! fzy_settings#quickfix() abort
     let items = s:quickfix_source()
     if empty(items)
-        call s:warn('No quickfix items!')
+        call fzy_settings#Warn('No quickfix items!')
         return
     endif
     let title = get(getqflist({ 'title': 1 }), 'title', '')
@@ -314,7 +314,7 @@ endfunction
 function! fzy_settings#location_list() abort
     let items = s:location_list_source()
     if empty(items)
-        call s:warn('No location list items!')
+        call fzy_settings#Warn('No location list items!')
         return
     endif
     let title = get(getloclist(0, { 'title': 1 }), 'title', '')
@@ -342,7 +342,7 @@ endfunction
 
 function! s:commands_source() abort
     let items = split(call('execute', ['command']), '\n')[1:]
-    return map(s:align_lists(map(items, 's:commands_format(v:val)')), 'join(v:val, " ")')
+    return map(fzy_settings#AlignLists(map(items, 's:commands_format(v:val)')), 'join(v:val, " ")')
 endfunction
 
 function! s:commands_sink(line) abort
@@ -353,7 +353,7 @@ endfunction
 function! fzy_settings#commands() abort
     let items = s:commands_source()
     if empty(items)
-        call s:warn('No command items!')
+        call fzy_settings#Warn('No command items!')
         return
     endif
     call fzy#Start(items, funcref('s:commands_sink'), s:opts('Commands'))
@@ -389,7 +389,7 @@ endfunction
 function! fzy_settings#command_history() abort
     let items = s:history_source(':')
     if empty(items)
-        call s:warn('No command history items!')
+        call fzy_settings#Warn('No command history items!')
         return
     endif
     call fzy#Start(items, funcref('s:history_sink', [':']), s:opts('CommandHistory'))
@@ -398,7 +398,7 @@ endfunction
 function! fzy_settings#search_history() abort
     let items = s:history_source('/')
     if empty(items)
-        call s:warn('No search history items!')
+        call fzy_settings#Warn('No search history items!')
         return
     endif
     call fzy#Start(items, funcref('s:history_sink', ['/']), s:opts('SearchHistory'))
@@ -415,7 +415,7 @@ endfunction
 function! fzy_settings#command_history_edit() abort
     let items = s:history_source(':')
     if empty(items)
-        call s:warn('No command history items!')
+        call fzy_settings#Warn('No command history items!')
         return
     endif
     call fzy#Start(items, funcref('s:history_edit_sink', [':']), s:opts('CommandHistoryEdit'))
@@ -424,7 +424,7 @@ endfunction
 function! fzy_settings#search_history_edit() abort
     let items = s:history_source('/')
     if empty(items)
-        call s:warn('No search history items!')
+        call fzy_settings#Warn('No search history items!')
         return
     endif
     call fzy#Start(items, funcref('s:history_edit_sink', ['/']), s:opts('SearchHistoryEdit'))
@@ -449,7 +449,7 @@ endfunction
 function! fzy_settings#registers() abort
     let items = s:registers_source()
     if empty(items)
-        call s:warn('No register items!')
+        call fzy_settings#Warn('No register items!')
         return
     endif
     call fzy#Start(items, funcref('s:registers_sink'), s:opts('Registers'))
@@ -472,7 +472,7 @@ endfunction
 function! fzy_settings#messages() abort
     let items = s:messages_source()
     if empty(items)
-        call s:warn('No message items!')
+        call fzy_settings#Warn('No message items!')
         return
     endif
     call fzy#Start(items, funcref('s:messages_sink'), s:opts('Messages'))
@@ -509,7 +509,7 @@ endfunction
 function! fzy_settings#jumps() abort
     let items = s:jumps_source()
     if len(items) < 2
-        call s:warn('No jump items!')
+        call fzy_settings#Warn('No jump items!')
         return
     endif
     call fzy#Start(items, funcref('s:jumps_sink'), s:opts('Jumps'))
