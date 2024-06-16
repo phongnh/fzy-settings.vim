@@ -214,26 +214,3 @@ function! fzy_settings#search_history_edit() abort
     endif
     call fzy#Start(items, funcref('s:history_edit_sink', ['/']), s:opts('SearchHistoryEdit'))
 endfunction
-
-" ------------------------------------------------------------------
-" FzyMessages
-" ------------------------------------------------------------------
-function! s:messages_sink(e) abort
-    let @" = a:e
-    echohl ModeMsg
-    echo 'Yanked!'
-    echohl None
-endfunction
-
-function! s:messages_source() abort
-    return split(call('execute', ['messages']), '\n')
-endfunction
-
-function! fzy_settings#messages() abort
-    let items = s:messages_source()
-    if empty(items)
-        call fzy_settings#Warn('No message items!')
-        return
-    endif
-    call fzy#Start(items, funcref('s:messages_sink'), s:opts('Messages'))
-endfunction

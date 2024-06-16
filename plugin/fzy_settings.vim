@@ -125,7 +125,7 @@ command! FzySearchHistory      call fzy_settings#search_history()
 command! FzyCommandHistoryEdit call fzy_settings#command_history_edit()
 command! FzySearchHistoryEdit  call fzy_settings#search_history_edit()
 command! FzyRegisters          call fzy_settings#registers#run()
-command! FzyMessages           call fzy_settings#messages()
+command! FzyMessages           call fzy_settings#messages#run()
 command! FzyJumps              call fzy_settings#jumps#run()
 
 function! s:SetupFzySettings() abort
