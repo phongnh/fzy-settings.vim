@@ -14,6 +14,7 @@ let g:fzy_symbols = {
 
 let g:fzy = {
             \ 'prompt': '> ',
+            \ 'histadd': v:false,
             \ 'showinfo': v:true,
             \ 'term_highlight': 'NormalDark',
             \ 'popup': {
@@ -22,7 +23,6 @@ let g:fzy = {
             \   'borderhighlight': ['GreyDark'],
             \   'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
             \ },
-            \ 'disable_cmd_history': v:true,
             \ }
 
 if exists('g:fzy_exe') && executable(g:fzy_exe)
