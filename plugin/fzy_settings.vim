@@ -50,10 +50,10 @@ else
     let g:fzy_tags_command = printf('%s -R', g:fzy_ctags_bin)
 endif
 
-function! s:build_find_command() abort
+function! s:BuildFindCommand() abort
     let find_commands = {
-                \ 'fd': 'fd --type file --color never --no-ignore-vcs --hidden --strip-cwd-prefix',
-                \ 'rg': 'rg --files --color never --no-ignore-vcs --ignore-dot --ignore-parent --hidden',
+                \ 'fd': 'fd --type file --color never --hidden',
+                \ 'rg': 'rg --files --color never --ignore-dot --ignore-parent --hidden',
                 \ }
 
     if g:fzy_find_tool ==# 'rg' && executable('rg')
@@ -69,30 +69,29 @@ function! s:build_find_command() abort
     call extend(g:fzy, { 'findcmd': g:fzy_find_command })
 endfunction
 
-function! s:build_find_all_command() abort
+function! s:BuildFindAllCommand() abort
     let find_all_commands = {
-                \ 'fd': 'fd --type file --color never --no-ignore --hidden --follow --strip-cwd-prefix',
-                \ 'rg': 'rg --files --color never --no-ignore --hidden --follow',
+                \ 'fd': 'fd --type file --color never --no-ignore --exclude .git --hidden --follow',
+                \ 'rg': 'rg --files --color never --no-ignore --exclude .git --hidden --follow',
                 \ }
 
     if g:fzy_find_tool ==# 'rg' && executable('rg')
         let g:fzy_find_all_command = find_all_commands['rg']
     else
-        let g:fzy_find_tool = 'fd'
         let g:fzy_find_all_command = find_all_commands['fd']
     endif
 
     call extend(g:fzy, { 'findcmd': g:fzy_find_all_command })
 endfunction
 
-function! s:build_grep_command() abort
+function! s:BuildGrepCommand() abort
     let g:fzy_grep_command = 'rg --color=never -H --no-heading --line-number --smart-case --hidden'
     let g:fzy_grep_command .= g:fzy_follow_links ? ' --follow' : ''
-    let g:fzy_grep_command .= get(g:, 'fzy_grep_ignore_vcs', 0) ? ' --no-ignore-vcs' : ''
+    let g:fzy_grep_command .= g:fzy_grep_no_ignore_vcs ? ' --no-ignore-vcs' : ''
     call extend(g:fzy, { 'grepcmd': g:fzy_grep_command, 'grepformat': '%f:%l:%m' })
 endfunction
 
-function! s:toggle_fzy_follow_links() abort
+function! s:ToggleFzyFollowLinks() abort
     if g:fzy_follow_links == 0
         let g:fzy_follow_links = 1
         echo 'Fzy follows symlinks!'
@@ -100,13 +99,13 @@ function! s:toggle_fzy_follow_links() abort
         let g:fzy_follow_links = 0
         echo 'Fzy does not follow symlinks!'
     endif
-    call s:build_find_command()
-    call s:build_grep_command()
+    call s:BuildFindCommand()
+    call s:BuildGrepCommand()
 endfunction
 
 command! -nargs=? -complete=dir FzyFindAll call fzy_settings#find_all(<q-args>)
 
-command! ToggleFzyFollowLinks call <SID>toggle_fzy_follow_links()
+command! ToggleFzyFollowLinks call <SID>ToggleFzyFollowLinks()
 
 command! FzyMru                call fzy_settings#mru()
 command! FzyMruInCwd           call fzy_settings#mru_in_cwd()
@@ -124,14 +123,14 @@ command! FzyRegisters          call fzy_settings#registers()
 command! FzyMessages           call fzy_settings#messages()
 command! FzyJumps              call fzy_settings#jumps()
 
-function! s:setup_fzy_settings() abort
-    call s:build_find_all_command()
-    call s:build_find_command()
-    call s:build_grep_command()
-    call s:update_popup_settings()
+function! s:SetupFzySettings() abort
+    call s:BuildFindAllCommand()
+    call s:BuildFindCommand()
+    call s:BuildGrepCommand()
+    call s:UpdatePopupSettings()
 endfunction
 
-function! s:update_popup_settings()
+function! s:UpdatePopupSettings() abort
     let l:popupwin = g:fzy_popup && winwidth(0) >= 120 ? v:true : v:false
     let l:lines = l:popupwin ? (&lines >= 20 ? float2nr(&lines * 0.85 / 2) + 3 : min([&lines - 3, 12])) : 10
     call extend(g:fzy, {
@@ -142,8 +141,8 @@ endfunction
 
 augroup FzySettings
     autocmd!
-    autocmd VimEnter * call <SID>setup_fzy_settings()
-    autocmd VimResized * call <SID>update_popup_settings()
+    autocmd VimEnter * call <SID>SetupFzySettings()
+    autocmd VimResized * call <SID>UpdatePopupSettings()
 augroup END
 
 let g:loaded_fzy_settings_vim = 1
