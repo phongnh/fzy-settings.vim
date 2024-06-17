@@ -23,7 +23,7 @@ function! s:commands_sink(line) abort
     call feedkeys(':' . cmd . (a:line[0] == '!' ? '' : ' '), 'n')
 endfunction
 
-function! fzy_settings#commands() abort
+function! fzy_settings#commands#run() abort
     let items = s:commands_source()
     if empty(items)
         return fzy_settings#Warn('No command items!')
