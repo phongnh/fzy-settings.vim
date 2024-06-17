@@ -132,8 +132,10 @@ endfunction
 
 command! ToggleFzyFollowLinks call <SID>ToggleFzyFollowLinks()
 
-command! -nargs=? -complete=dir FzyFiles    call fzy_settings#files#run(empty(<q-args>) ? getcwd() : <q-args>)
-command! -nargs=? -complete=dir FzyAllFiles call fzy_settings#files#all(empty(<q-args>) ? getcwd() : <q-args>)
+command! -nargs=? -complete=dir FzyFiles         call fzy_settings#files#run({ 'dir': empty(<q-args>) ? getcwd() : <q-args> })
+command! -nargs=? -complete=dir FzyAllFiles      call fzy_settings#files#all({ 'dir': empty(<q-args>) ? getcwd() : <q-args> })
+command! -nargs=? -complete=dir FzyFilesSplit    call fzy_settings#files#run({ 'dir': empty(<q-args>) ? getcwd() : <q-args>, 'editcmd': 'split', 'mods': <q-mods> })
+command! -nargs=? -complete=dir FzyAllFilesSplit call fzy_settings#files#all({ 'dir': empty(<q-args>) ? getcwd() : <q-args>, 'editcmd': 'split', 'mods': <q-mods> })
 
 command!       FzyMru            call fzy_settings#mru#run()
 command!       FzyMruCwd         call fzy_settings#mru#run_in_cwd()
