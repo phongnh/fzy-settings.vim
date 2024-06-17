@@ -32,6 +32,8 @@ let g:fzy_popup_style = get(g:, 'fzy_popup_style', 'default')
 
 if g:fzy_popup_style ==# 'none'
     let g:fzy.popup.borderchars = [' ']
+elseif g:fzy_popup_style ==# 'bold'
+    let g:fzy.popup.borderchars = ['━', '┃', '━', '┃', '┏', '┓', '┛', '┗']
 elseif g:fzy_popup_style ==# 'single'
     let g:fzy.popup.borderchars = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
 elseif g:fzy_popup_style ==# 'double'
