@@ -21,7 +21,6 @@ let g:fzy = {
             \   'minwidth': 120,
             \   'highlight': 'NormalDark',
             \   'borderhighlight': ['GreyDark'],
-            \   'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
             \ },
             \ }
 
@@ -29,7 +28,15 @@ if exists('g:fzy_exe') && executable(g:fzy_exe)
     let g:fzy.exe = g:fzy_exe
 endif
 
-if get(g:, 'fzy_popup', 'default') ==# 'round'
+let g:fzy_popup_style = get(g:, 'fzy_popup_style', 'default')
+
+if g:fzy_popup_style ==# 'none'
+    let g:fzy.popup.borderchars = [' ']
+elseif g:fzy_popup_style ==# 'single'
+    let g:fzy.popup.borderchars = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
+elseif g:fzy_popup_style ==# 'double'
+    let g:fzy.popup.borderchars = ['═', '║', '═', '║', '╔', '╗', '╝', '╚']
+else
     let g:fzy.popup.borderchars = ['─', '│', '─', '│', '╭', '╮', '╯', '╰']
 endif
 
