@@ -19,24 +19,7 @@ function! s:history_sink(type, line) abort
     call feedkeys("\<Plug>(-fzy-vim-do)")
 endfunction
 
-function! fzy_settings#history#command() abort
-    let items = s:history_source(':')
-    if empty(items)
-        return fzy_settings#Warn('No command history items!')
-        return
-    endif
-    call fzy#Start(items, funcref('s:history_sink', [':']), fzy_settings#FzyOpts('CommandHistory'))
-endfunction
-
-function! fzy_settings#history#search() abort
-    let items = s:history_source('/')
-    if empty(items)
-        return fzy_settings#Warn('No search history items!')
-    endif
-    call fzy#Start(items, funcref('s:history_sink', ['/']), fzy_settings#FzyOpts('SearchHistory'))
-endfunction
-
-function! s:history_edit_sink(type, line) abort
+function! s:history_prompt_sink(type, line) abort
     let prefix = "\<Plug>(-fzy-" . a:type . ')'
     let item = matchstr(a:line, '\s*[0-9]\+' . g:fzy_symbols.nbs . '*\zs.*')
     call histadd(a:type, item)
@@ -44,18 +27,20 @@ function! s:history_edit_sink(type, line) abort
     call feedkeys(a:type . "\<Up>", 'n')
 endfunction
 
-function! fzy_settings#history#command_edit() abort
+function! fzy_settings#history#command(...) abort
     let items = s:history_source(':')
     if empty(items)
         return fzy_settings#Warn('No command history items!')
     endif
-    call fzy#Start(items, funcref('s:history_edit_sink', [':']), fzy_settings#FzyOpts('CommandHistoryEdit'))
+    let sink = get(a:, 1, 0) ? 's:history_sink' : 's:history_prompt_sink'
+    call fzy#Start(items, funcref(sink, [':']), fzy_settings#FzyOpts('CommandHistory'))
 endfunction
 
-function! fzy_settings#history#search_edit() abort
+function! fzy_settings#history#search(...) abort
     let items = s:history_source('/')
     if empty(items)
         return fzy_settings#Warn('No search history items!')
     endif
-    call fzy#Start(items, funcref('s:history_edit_sink', ['/']), fzy_settings#FzyOpts('SearchHistoryEdit'))
+    let sink = get(a:, 1, 0) ? 's:history_sink' : 's:history_prompt_sink'
+    call fzy#Start(items, funcref(sink, ['/']), fzy_settings#FzyOpts('SearchHistory'))
 endfunction
