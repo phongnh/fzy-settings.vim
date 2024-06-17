@@ -49,6 +49,7 @@ else
 endif
 
 let g:fzy_find_tool          = get(g:, 'fzy_find_tool', 'fd')
+let g:fzy_find_tool          = g:fzy_find_tool ==# 'rg' && executable('rg') ? 'rg' : 'fd'
 let g:fzy_find_no_ignore_vcs = get(g:, 'fzy_find_no_ignore_vcs', 0)
 let g:fzy_follow_links       = get(g:, 'fzy_follow_links', 1)
 let g:fzy_grep_no_ignore_vcs = get(g:, 'fzy_grep_no_ignore_vcs', 0)
@@ -68,10 +69,9 @@ function! s:BuildFindCommand() abort
                 \ 'rg': 'rg --files --color never --ignore-dot --ignore-parent --hidden',
                 \ }
 
-    if g:fzy_find_tool ==# 'rg' && executable('rg')
+    if g:fzy_find_tool ==# 'rg'
         let g:fzy_find_command = find_commands['rg']
     else
-        let g:fzy_find_tool = 'fd'
         let g:fzy_find_command = find_commands['fd']
     endif
 
@@ -87,7 +87,7 @@ function! s:BuildFindAllCommand() abort
                 \ 'rg': 'rg --files --color never --no-ignore --exclude .git --hidden --follow',
                 \ }
 
-    if g:fzy_find_tool ==# 'rg' && executable('rg')
+    if g:fzy_find_tool ==# 'rg'
         let g:fzy_find_all_command = find_all_commands['rg']
     else
         let g:fzy_find_all_command = find_all_commands['fd']
