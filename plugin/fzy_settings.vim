@@ -16,11 +16,11 @@ let g:fzy = {
             \ 'prompt': '> ',
             \ 'histadd': v:false,
             \ 'showinfo': v:true,
-            \ 'term_highlight': 'NormalDark',
+            \ 'term_highlight': 'Terminal',
             \ 'popup': {
             \   'minwidth': 120,
-            \   'highlight': 'NormalDark',
-            \   'borderhighlight': ['GreyDark'],
+            \   'highlight': 'NormalFloat',
+            \   'borderhighlight': ['NormalFloat'],
             \ },
             \ }
 
