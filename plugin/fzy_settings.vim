@@ -104,11 +104,14 @@ function! s:SetupFzySettings() abort
 endfunction
 
 function! s:UpdatePopupSettings() abort
-    let l:popupwin = g:fzy_popup && winwidth(0) >= 120 ? v:true : v:false
-    let l:lines = l:popupwin ? (&lines >= 20 ? float2nr(&lines * 0.85 / 2) + 3 : min([&lines - 3, 12])) : 10
+    let l:popupwin = g:fzy_popup && &columns >= 120 ? v:true : v:false
     call extend(g:fzy, {
-                \ 'lines': l:lines,
+                \ 'lines': l:popupwin ? float2nr(&lines * 0.85 / 2) : 12,
                 \ 'popupwin': l:popupwin,
+                \ })
+    call extend(g:fzy.popup, {
+                \ 'minwidth': max([float2nr(&columns * 0.70), 150]),
+                \ 'minheight': float2nr(&lines * 0.85),
                 \ })
 endfunction
 
