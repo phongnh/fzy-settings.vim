@@ -18,7 +18,7 @@ let g:fzy = {
             \ 'showinfo': v:true,
             \ 'term_highlight': 'Terminal',
             \ 'popup': {
-            \   'minwidth': 120,
+            \   'minwidth': 80,
             \   'highlight': 'NormalFloat',
             \   'borderhighlight': ['NormalFloat'],
             \ },
@@ -113,13 +113,13 @@ function! s:SetupFzySettings() abort
 endfunction
 
 function! s:UpdatePopupSettings() abort
-    let l:popupwin = g:fzy_popup && &columns >= 120 ? v:true : v:false
+    let l:popupwin = g:fzy_popup && &columns >= 80 ? v:true : v:false
     call extend(g:fzy, {
                 \ 'lines': l:popupwin ? float2nr(&lines * 0.85 / 2) : 12,
                 \ 'popupwin': l:popupwin,
                 \ })
     call extend(g:fzy.popup, {
-                \ 'minwidth': max([float2nr(&columns * 0.70), 150]),
+                \ 'minwidth': min([float2nr(&columns * 0.75), 150]),
                 \ 'minheight': float2nr(&lines * 0.85),
                 \ })
 endfunction
