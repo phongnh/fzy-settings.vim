@@ -23,3 +23,8 @@ function! fzy_settings#files#all(...) abort
     let l:opts = extend(get(a:, 1, {}), { 'findcmd': g:fzy_find_all_command })
     call fzy_settings#files#run(l:opts)
 endfunction
+
+function! fzy_settings#files#git(...) abort
+    let l:opts = extend(get(a:, 1, {}), { 'findcmd': 'git ls-files . --cached --others --exclude-standard' })
+    call fzy_settings#files#run(l:opts)
+endfunction
