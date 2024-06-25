@@ -30,11 +30,11 @@ function! s:btags_source(tag_cmds) abort
         throw 'No tags found'
     endif
 
-    return map(fzy_settings#AlignLists(map(lines, 's:btags_format(v:val)')), 'join(v:val, g:fzy_symbols.tab)')
+    return map(fzy_settings#AlignLists(map(lines, 's:btags_format(v:val)')), 'v:val[0] . g:fzy_symbols.sep . join(v:val[1:-1], g:fzy_symbols.tab)')
 endfunction
 
 function! s:btags_sink(path, editcmd, line) abort
-    let linenr = fzy_settings#Trim(split(a:line, g:fzy_symbols.tab)[0])
+    let linenr = fzy_settings#Trim(split(a:line, g:fzy_symbols.sep)[0])
     execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 

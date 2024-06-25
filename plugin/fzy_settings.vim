@@ -10,6 +10,7 @@ endif
 let g:fzy_symbols = {
             \ 'nbs': nr2char(0xa0),
             \ 'tab': repeat(nr2char(0xa0), 4),
+            \ 'sep': ' ┊ ',
             \ }
 
 let g:fzy = {
