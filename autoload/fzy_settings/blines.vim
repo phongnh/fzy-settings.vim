@@ -1,12 +1,12 @@
 function! s:blines_sink(line) abort
   normal! m'
-  execute split(a:line, g:fzy_symbols.tab)[0]
+  execute split(a:line, g:fzy_symbols.sep)[0]
   normal! ^zvzz
 endfunction
 
 function! s:blines_source() abort
     let linefmt = '%' . len(string(line('$'))) . 'd'
-    let format = linefmt . g:fzy_symbols.tab . '%s'
+    let format = linefmt . g:fzy_symbols.sep . '%s'
     return map(getline(1, '$'), 'printf(format, v:key + 1, v:val)')
 endfunction
 
