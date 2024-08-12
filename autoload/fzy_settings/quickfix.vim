@@ -15,13 +15,14 @@ function! s:quickfix_source() abort
     return map(getqflist(), 's:quickfix_format(v:val)')
 endfunction
 
-function! fzy_settings#quickfix#run() abort
+function! fzy_settings#quickfix#quickfix() abort
     let items = s:quickfix_source()
     if empty(items)
         return fzy_settings#Warn('No quickfix items!')
     endif
     let title = get(getqflist({ 'title': 1 }), 'title', '')
     let title = 'Quickfix' . (strlen(title) ? ': ' : '') . title
+    execute 'cclose'
     call fzy#Start(items, funcref('s:quickfix_sink'), fzy_settings#FzyOpts(title))
 endfunction
 
@@ -36,5 +37,6 @@ function! fzy_settings#quickfix#loclist() abort
     endif
     let title = get(getloclist(0, { 'title': 1 }), 'title', '')
     let title = 'LocationList' . (strlen(title) ? ': ' : '') . title
+    execute 'lclose'
     call fzy#Start(items, funcref('s:quickfix_sink'), fzy_settings#FzyOpts(title))
 endfunction
