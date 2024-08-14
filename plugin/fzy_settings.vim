@@ -57,13 +57,8 @@ let g:fzy_follow_links       = get(g:, 'fzy_follow_links', 1)
 let g:fzy_grep_no_ignore_vcs = get(g:, 'fzy_grep_no_ignore_vcs', 0)
 
 let g:fzy_ctags_bin    = get(g:, 'fzy_ctags_bin', 'ctags')
-let g:fzy_ctags_ignore = get(g:, 'fzy_ctags_ignore', expand('~/.ctagsignore'))
-
-if get(g:, 'fzy_universal_ctags', fzy_settings#IsUniversalCtags(g:fzy_ctags_bin)) && filereadable(g:fzy_ctags_ignore)
-    let g:fzy_tags_command = printf('%s --exclude=@%s -R', g:fzy_ctags_bin, g:fzy_ctags_ignore)
-else
-    let g:fzy_tags_command = printf('%s -R', g:fzy_ctags_bin)
-endif
+let g:fzy_ctags_ignore = expand(get(g:, 'fzy_ctags_ignore', ''))
+let g:fzy_tags_command = g:fzy_ctags_bin . (filereadable(g:fzy_ctags_ignore) ? ' --exclude=@' . g:fzy_ctags_ignore : '') . ' -R'
 
 function! s:BuildFindCommand() abort
     let find_commands = {

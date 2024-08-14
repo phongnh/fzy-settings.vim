@@ -40,10 +40,6 @@ function! fzy_settings#AlignLists(lists) abort
     return a:lists
 endfunction
 
-function! fzy_settings#IsUniversalCtags(ctags_bin) abort
-    return system(a:ctags_bin . ' --version') =~# 'Universal Ctags'
-endfunction
-
 function! fzy_settings#FzyOpts(title) abort
     let opts = get(g:, 'fzy', {})->deepcopy()->extend({ 'statusline': a:title })
     call get(opts, 'popup', {})->extend({ 'title': a:title })
