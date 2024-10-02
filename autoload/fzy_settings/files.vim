@@ -1,7 +1,7 @@
 function! s:open_file_sink(dir, vim_cmd, choice) abort
     let fpath = fnamemodify(a:dir, ':p:s?/$??') . '/' . a:choice
     let fpath = fpath->resolve()->fnamemodify(':.')->fnameescape()
-    call fzy_settings#TryExe(printf('%s %s', a:vim_cmd, fpath))
+    call fzy_settings#try_exe(printf('%s %s', a:vim_cmd, fpath))
 endfunction
 
 function! s:opts(opts) abort
@@ -16,7 +16,7 @@ endfunction
 
 function! fzy_settings#files#run(...) abort
     let l:opts = s:opts(get(a:, 1, {}))
-    call fzy#Start(l:opts.filecmd, funcref('s:open_file_sink', [l:opts.path, l:opts.opencmd]), fzy_settings#FzyOpts(l:opts.stl))
+    call fzy#Start(l:opts.filecmd, funcref('s:open_file_sink', [l:opts.path, l:opts.opencmd]), fzy_settings#fzy_opts(l:opts.stl))
 endfunction
 
 function! fzy_settings#files#all(...) abort

@@ -30,11 +30,11 @@ function! s:btags_source(tag_cmds) abort
         throw 'No tags found'
     endif
 
-    return map(fzy_settings#AlignLists(map(lines, 's:btags_format(v:val)')), 'join(v:val, g:fzy_symbols.tab)')
+    return map(fzy_settings#align_lists(map(lines, 's:btags_format(v:val)')), 'join(v:val, g:fzy_symbols.tab)')
 endfunction
 
 function! s:btags_sink(path, editcmd, line) abort
-    let linenr = fzy_settings#Trim(split(a:line, g:fzy_symbols.tab)[0])
+    let linenr = fzy_settings#trim(split(a:line, g:fzy_symbols.tab)[0])
     execute printf("%s +%s %s", a:editcmd, linenr, a:path)
 endfunction
 
@@ -53,8 +53,8 @@ endfunction
 function! fzy_settings#btags#run() abort
     try
         let tag_cmds = s:btags_commands()
-        call fzy#Start(s:btags_source(tag_cmds), funcref('s:btags_sink', [expand('%:p'), 'silent edit']), fzy_settings#FzyOpts('BufTags: ' . expand('%')))
+        call fzy#Start(s:btags_source(tag_cmds), funcref('s:btags_sink', [expand('%:p'), 'silent edit']), fzy_settings#fzy_opts('BufTags: ' . expand('%')))
     catch
-        call fzy_settings#Warn(v:exception)
+        call fzy_settings#warn(v:exception)
     endtry
 endfunction

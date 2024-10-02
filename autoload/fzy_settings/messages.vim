@@ -12,7 +12,7 @@ endfunction
 function! fzy_settings#messages#run() abort
     let items = s:messages_source()
     if empty(items)
-        return fzy_settings#Warn('No message items!')
+        return fzy_settings#warn('No message items!')
     endif
-    call fzy#Start(items, funcref('s:messages_sink'), fzy_settings#FzyOpts('Messages'))
+    call fzy#Start(items, funcref('s:messages_sink'), fzy_settings#fzy_opts('Messages'))
 endfunction

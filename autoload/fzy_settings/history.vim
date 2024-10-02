@@ -30,17 +30,17 @@ endfunction
 function! fzy_settings#history#command(...) abort
     let items = s:history_source(':')
     if empty(items)
-        return fzy_settings#Warn('No command history items!')
+        return fzy_settings#warn('No command history items!')
     endif
     let sink = get(a:, 1, 0) ? 's:history_sink' : 's:history_prompt_sink'
-    call fzy#Start(items, funcref(sink, [':']), fzy_settings#FzyOpts('CommandHistory'))
+    call fzy#Start(items, funcref(sink, [':']), fzy_settings#fzy_opts('CommandHistory'))
 endfunction
 
 function! fzy_settings#history#search(...) abort
     let items = s:history_source('/')
     if empty(items)
-        return fzy_settings#Warn('No search history items!')
+        return fzy_settings#warn('No search history items!')
     endif
     let sink = get(a:, 1, 0) ? 's:history_sink' : 's:history_prompt_sink'
-    call fzy#Start(items, funcref(sink, ['/']), fzy_settings#FzyOpts('SearchHistory'))
+    call fzy#Start(items, funcref(sink, ['/']), fzy_settings#fzy_opts('SearchHistory'))
 endfunction

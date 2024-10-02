@@ -53,21 +53,21 @@ endfunction
 
 function! s:mru_sink(editcmd, choice) abort
     let fname = fnameescape(a:choice)
-    call fzy_settings#TryExe(printf('%s %s', a:editcmd, fname))
+    call fzy_settings#try_exe(printf('%s %s', a:editcmd, fname))
 endfunction
 
 function! fzy_settings#mru#run() abort
     let items = s:vim_recent_files()
     if empty(items)
-        return fzy_settings#Warn('No MRU items!')
+        return fzy_settings#warn('No MRU items!')
     endif
-    call fzy#Start(items, funcref('s:mru_sink', ['edit']), fzy_settings#FzyOpts('MRU'))
+    call fzy#Start(items, funcref('s:mru_sink', ['edit']), fzy_settings#fzy_opts('MRU'))
 endfunction
 
 function! fzy_settings#mru#run_in_cwd() abort
     let items = s:vim_recent_files_in_cwd()
     if empty(items)
-        return fzy_settings#Warn('No MRU items!')
+        return fzy_settings#warn('No MRU items!')
     endif
-    call fzy#Start(items, funcref('s:mru_sink', ['edit']), fzy_settings#FzyOpts(printf('MRU [directory: %s]', getcwd())))
+    call fzy#Start(items, funcref('s:mru_sink', ['edit']), fzy_settings#fzy_opts(printf('MRU [directory: %s]', getcwd())))
 endfunction
